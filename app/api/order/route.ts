@@ -37,19 +37,35 @@ export const POST = async (req: NextRequest) => {
 }
 export const GET = async () => {
   try {
-    await connectDb() // Ensure database connection
-    const orders = await Order.find({}).populate("product") // Populate 'product' field
-    if (!orders.length) {
+    // Ensure database connection
+    await connectDb()
+
+    // Fetch all orders and populate the product field
+    const orders = await Order.find({}).populate("product") //if product id is not there after populating the value of product will be null
+
+    // Filter orders where the product does not exist
+    const invalidOrders = orders.filter((order) => !order.product)
+
+    // Remove invalid orders from the database
+    if (invalidOrders.length > 0) {
+      const invalidOrderIds = invalidOrders.map((order) => order._id)
+      await Order.deleteMany({ _id: { $in: invalidOrderIds } })
+    }
+
+    // Fetch valid orders again after cleanup
+    const validOrders = await Order.find({}).populate("product")
+
+    if (!validOrders.length) {
       return NextResponse.json({
         success: false,
-        message: "No order yet.",
+        message: "No valid orders found.",
       })
     }
 
     return NextResponse.json({
       success: true,
-      orders,
-      message: "Order lists successfully fetched.",
+      orders: validOrders,
+      message: "Order list successfully fetched.",
     })
   } catch (error) {
     if (error instanceof Error) {
