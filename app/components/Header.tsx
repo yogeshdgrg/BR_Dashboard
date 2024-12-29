@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { FaUnlockKeyhole } from "react-icons/fa6"
 import { toast } from "react-toastify"
+import Image from "next/image"
 
 export default function Header() {
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -19,7 +20,7 @@ export default function Header() {
     <header className="bg-white shadow">
       <div className="px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+          <h1 className="text-2xl font-semibold text-gray-900"><Image src={"/br.jpg"} alt="BR Logo" height={48} width={48}/></h1>
           <div className="relative">
             <img
               className="h-10 w-10 rounded-full object-cover cursor-pointer"

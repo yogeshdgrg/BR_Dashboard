@@ -7,7 +7,7 @@ export const PATCH = async (
   { params }: { params: { id: string } }
 ) => {
   try {
-    const id = params.id
+    const { id } = params
     const dataToBeUpdated = await req.json()
 
     if (!id)
