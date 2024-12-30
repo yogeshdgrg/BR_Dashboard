@@ -4,7 +4,7 @@
 // import RecentOrders from './components/RecentOrders';
 // "use client"
 // import DashboardStats from "./components/DashboardStats";
-import RecentOrders from "./components/RecentOrders"
+// import RecentOrders from "./components/RecentOrders"
 import RevenueChart from "./components/RevenueChart"
 import TopProducts from "./components/TopProducts"
 

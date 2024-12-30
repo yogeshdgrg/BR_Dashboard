@@ -7,16 +7,16 @@ import { Skeleton } from "@/components/ui/skeleton"
 import AddProductForm from "./AddProductForm"
 import { toast } from "sonner"
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+// import {
+//   AlertDialog,
+//   AlertDialogAction,
+//   AlertDialogCancel,
+//   AlertDialogContent,
+//   AlertDialogDescription,
+//   AlertDialogFooter,
+//   AlertDialogHeader,
+//   AlertDialogTitle,
+// } from "@/components/ui/alert-dialog"
 
 export default function ProductList() {
   const [products, setProducts] = useState([])
