@@ -14,6 +14,7 @@ export interface IProduct extends Document {
   category: string
   sizes: string[] // Changed [string] to string[]
   images: Image[] // Updated to use camelCase for consistency
+  feature: string[]
 }
 
 // Define the Mongoose Schema
@@ -45,6 +46,9 @@ const productSchema: Schema = new Schema(
           image: { type: String, required: true }, // Changed Images to images
         },
       ],
+    },
+    feature: {
+      type: [String],
     },
   },
   { timestamps: true } // Enable timestamps

@@ -14,9 +14,10 @@ export const addProduct = async (request: NextRequest) => {
     const price = formData.get("price")
     const category = formData.get("category")
     const sizes = JSON.parse(formData.get("sizes") as string)
+    const feature = JSON.parse(formData.get("feature") as string)
 
     // Validation
-    if (!name || !description || !category || !sizes) {
+    if (!name || !description || !category || !sizes || !feature) {
       return {
         success: false,
         message: "Missing required fields.",
@@ -88,6 +89,7 @@ export const addProduct = async (request: NextRequest) => {
       category,
       sizes,
       images: processedImages,
+      feature
     }
 
     const product = await Product.create(productData)
