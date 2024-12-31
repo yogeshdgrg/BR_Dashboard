@@ -7,16 +7,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import AddProductForm from "./AddProductForm"
 import { toast } from "sonner"
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal"
-// import {
-//   AlertDialog,
-//   AlertDialogAction,
-//   AlertDialogCancel,
-//   AlertDialogContent,
-//   AlertDialogDescription,
-//   AlertDialogFooter,
-//   AlertDialogHeader,
-//   AlertDialogTitle,
-// } from "@/components/ui/alert-dialog"
 
 export default function ProductList() {
   const [products, setProducts] = useState([])
@@ -31,7 +21,8 @@ export default function ProductList() {
     try {
       const response = await fetch("http://localhost:3000/api/product")
       const data = await response.json()
-      setProducts(data.products)
+      console.log(data)
+      setProducts(data.response)
     } catch (error) {
       console.error("Error fetching products:", error)
       toast.error("Failed to fetch products")
@@ -87,11 +78,6 @@ export default function ProductList() {
     setTimeout(() => setSelectedProduct(null), 300)
   }
 
-  // const handleAddProduct = async () => {
-  //   await fetchProducts()
-  //   setIsAddFormOpen(false)
-  // }
-
   if (loading) {
     return <LoadingSkeleton />
   }
@@ -115,17 +101,21 @@ export default function ProductList() {
             products.map((product) => (
               <div key={product._id} className="bg-white shadow rounded-lg p-4">
                 <div className="flex items-center space-x-4">
-                  <Image
-                    src={product.img}
-                    alt={product.name}
-                    width={60}
-                    height={60}
-                    className="rounded-md object-cover"
-                  />
+                  {product.images && product.images.length > 0 && (
+                    <Image
+                      src={product.images[0].image}
+                      alt={product.name}
+                      width={60}
+                      height={60}
+                      className="rounded-md object-cover"
+                    />
+                  )}
                   <div className="flex-1">
                     <h3 className="font-medium">{product.name}</h3>
                     <p className="text-sm text-gray-500">{product.category}</p>
-                    <p className="text-sm font-medium">Rs.{product.price}</p>
+                    <p className="text-sm text-gray-500">
+                      {product.description}
+                    </p>
                   </div>
                   <div className="flex flex-col space-y-2">
                     <button
@@ -142,26 +132,6 @@ export default function ProductList() {
                     </button>
                   </div>
                 </div>
-
-                {product.colors && product.colors.length > 0 && (
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-500 mb-2">
-                      Available Colors:
-                    </p>
-                    <div className="flex space-x-2">
-                      {product.colors.map((color) => (
-                        <div key={color._id} className="relative w-8 h-8">
-                          <Image
-                            src={color.image}
-                            alt={color.name}
-                            fill
-                            className="rounded-full object-cover"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
         </div>
@@ -182,10 +152,7 @@ export default function ProductList() {
                 Category
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Price
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Colors
+                Description
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
@@ -197,50 +164,27 @@ export default function ProductList() {
               products.map((product) => (
                 <tr key={product._id}>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <Image
-                      src={product.img}
-                      alt={product.name}
-                      width={40}
-                      height={40}
-                      className="rounded-md object-cover"
-                    />
+                    {product.images && product.images.length > 0 && (
+                      <Image
+                        src={product.images[0].image}
+                        alt={product.name}
+                        width={40}
+                        height={40}
+                        className="rounded-md object-cover"
+                      />
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       {product.name}
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {product.description.substring(0, 50)}...
-                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">
-                      {product.category}
-                    </div>
+                    <div className="text-sm text-gray-500">{product.category}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      Rs.{product.price}
-                    </div>
+                    <div className="text-sm text-gray-500">{product.description}</div>
                   </td>
-                  <td className="px-6 py-4 ">
-                    <div className="grid grid-cols-2 gap-2 max-h-16 overflow-hidden">
-                      {product.colors.map((color) => (
-                        <div
-                          key={color._id}
-                          className="relative w-6 h-6 rounded-full border border-gray-200"
-                        >
-                          <Image
-                            src={color.image}
-                            alt={color.name}
-                            fill
-                            className="rounded-full object-cover"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </td>
-
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex flex-col gap-3">
                     <button
                       className="text-blue-600 hover:text-blue-900 mr-4"
@@ -262,28 +206,6 @@ export default function ProductList() {
       </div>
 
       {/* Delete Confirmation Modal */}
-      {/* <AlertDialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete{" "}
-              <span className="font-medium">{productToDelete?.name}</span> and
-              remove its data from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog> */}
-
       <DeleteConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}

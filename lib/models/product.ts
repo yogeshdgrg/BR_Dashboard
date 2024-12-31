@@ -9,7 +9,6 @@ interface Image {
 export interface IProduct extends Document {
   name: string
   description: string
-  img: string
   price: number
   category: string
   sizes: string[] // Changed [string] to string[]
@@ -25,10 +24,6 @@ const productSchema: Schema = new Schema(
       required: true,
     },
     description: {
-      type: String,
-      required: true,
-    },
-    img: {
       type: String,
       required: true,
     },

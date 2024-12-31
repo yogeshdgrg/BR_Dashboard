@@ -24,27 +24,6 @@ export const addProduct = async (request: NextRequest) => {
       }
     }
 
-    // Upload main product image
-    const mainImage = formData.get("img") as File
-    console.log("Main image : ", mainImage)
-    let mainImageUrl = ""
-    if (mainImage) {
-      try {
-        mainImageUrl = await uploadToCloudinary(mainImage, "products/main")
-      } catch (error) {
-        return {
-          success: false,
-          message: "Error uploading main image.",
-          error: error instanceof Error ? error.message : "Unknown error",
-        }
-      }
-    } else {
-      return {
-        success: false,
-        message: "Main image is required.",
-      }
-    }
-
     // Process additional images - Fixed to handle multiple files
     const processedImages = []
 
@@ -84,12 +63,11 @@ export const addProduct = async (request: NextRequest) => {
     const productData = {
       name,
       description,
-      img: mainImageUrl,
       price: Number(price),
       category,
       sizes,
       images: processedImages,
-      feature
+      feature,
     }
 
     const product = await Product.create(productData)
