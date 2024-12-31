@@ -1,55 +1,61 @@
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Plus } from "lucide-react"
+import { useState } from "react"
+import { useToast } from "@/hooks/use-toast"
 // import { useToast } from "@/components/ui/use-toast";
 
 interface AddNewsSliderProps {
-  onNewsAdded: () => void;
+  onNewsAdded: () => void
 }
 
 export function AddNewsSlider({ onNewsAdded }: AddNewsSliderProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-  
+  const [isOpen, setIsOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const { toast } = useToast()
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    const formData = new FormData(e.currentTarget);
-    
+    e.preventDefault()
+    setIsLoading(true)
+
+    const formData = new FormData(e.currentTarget)
+
     try {
-      const response = await fetch('/api/news', {
-        method: 'POST',
+      const response = await fetch("/api/news", {
+        method: "POST",
         body: formData,
-      });
-      
-      if (!response.ok) throw new Error('Failed to add news');
-      
+      })
+
+      if (!response.ok) throw new Error("Failed to add news")
+
       toast({
         title: "Success",
         description: "News article added successfully",
-      });
-      
-      onNewsAdded();
-      setIsOpen(false);
-      e.currentTarget.reset();
-    } catch (error) {
+      })
+
+      onNewsAdded()
+      setIsOpen(false)
+      e.currentTarget.reset()
+    } catch {
       toast({
         title: "Error",
         description: "Failed to add news article",
         variant: "destructive",
-      });
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
-  
+  }
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
@@ -76,7 +82,13 @@ export function AddNewsSlider({ onNewsAdded }: AddNewsSliderProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="image">Image</Label>
-            <Input id="image" name="image" type="file" accept="image/*" required />
+            <Input
+              id="image"
+              name="image"
+              type="file"
+              accept="image/*"
+              required
+            />
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "Adding..." : "Add News"}
@@ -84,5 +96,5 @@ export function AddNewsSlider({ onNewsAdded }: AddNewsSliderProps) {
         </form>
       </SheetContent>
     </Sheet>
-  );
+  )
 }

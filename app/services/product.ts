@@ -8,67 +8,82 @@ export const addProduct = async (request: NextRequest) => {
     await connectDb()
     const formData = await request.formData()
 
+    // Extract basic fields
     const name = formData.get("name")
     const description = formData.get("description")
     const price = formData.get("price")
     const category = formData.get("category")
-    const dimensions = formData.get("dimensions")
-    if (!name || !description || !price || !category || !dimensions) {
+    const sizes = JSON.parse(formData.get("sizes") as string)
+
+    // Validation
+    if (!name || !description || !category || !sizes) {
       return {
         success: false,
         message: "Missing required fields.",
       }
     }
 
-    // Step 3: Process the main product image
-    const mainImage = formData.get("img") as File // Get the uploaded file from the form data
+    // Upload main product image
+    const mainImage = formData.get("img") as File
+    console.log("Main image : ", mainImage)
     let mainImageUrl = ""
     if (mainImage) {
-      // Upload the image to Cloudinary and get the URL
-      // console.log("I am in uploading the main image")
-      mainImageUrl = await uploadToCloudinary(mainImage)
-    }
-    console.log("main image url: ", mainImageUrl)
-
-    // Extract color images
-
-    // Step 4: Process color images
-    const colorImagesData = JSON.parse(formData.get("colors") as string)
-    console.log("ColorImagesData : ", colorImagesData) // Get color data as an array
-    const processedColors = []
-
-    for (const color of colorImagesData) {
-      const colorFile = formData.get(`color_${color.name}`) as File // Get the file for each color
-      console.log(`color name: color_${color.name}`)
-      let colorImageUrl = color.image // Default to existing image URL
-
-      console.log("Color file : ", colorFile)
-      if (colorFile) {
-        // If a file is uploaded, upload it to Cloudinary
-        colorImageUrl = await uploadToCloudinary(colorFile, "product_colors")
-        console.log("ColorImageUrl : ", colorImageUrl)
+      try {
+        mainImageUrl = await uploadToCloudinary(mainImage, "products/main")
+      } catch (error) {
+        return {
+          success: false,
+          message: "Error uploading main image.",
+          error: error instanceof Error ? error.message : "Unknown error",
+        }
       }
-
-      processedColors.push({
-        name: color.name,
-        image: colorImageUrl,
-      })
-
-      // console.log("Processed color : ", processedColors)
+    } else {
+      return {
+        success: false,
+        message: "Main image is required.",
+      }
     }
 
-    // Step 5: Prepare the product data
+    // Process additional images - Fixed to handle multiple files
+    const processedImages = []
+    
+    // Get all form entries and filter for additionalImages
+    const formEntries = Array.from(formData.entries())
+    const additionalImagesEntries = formEntries.filter(([key]) => key === 'additionalImages')
+    
+    console.log("Number of additional images found:", additionalImagesEntries.length)
+
+    // Process each additional image
+    for (const [_, imageFile] of additionalImagesEntries) {
+      if (imageFile instanceof File) {
+        try {
+          console.log("Processing additional image:", imageFile.name)
+          const imageUrl = await uploadToCloudinary(
+            imageFile,
+            "products/additional"
+          )
+          processedImages.push({
+            image: imageUrl,
+          })
+          console.log("Successfully uploaded additional image:", imageUrl)
+        } catch (error) {
+          console.error("Error uploading additional image:", error)
+        }
+      }
+    }
+
+    console.log("Total processed additional images:", processedImages.length)
+
+    // Prepare the product data according to the new schema
     const productData = {
-      name: formData.get("name"),
-      description: formData.get("description"),
+      name,
+      description,
       img: mainImageUrl,
-      price: Number(formData.get("price")),
-      category: formData.get("category"),
-      dimensions: JSON.parse(formData.get("dimensions") as string),
-      colors: processedColors,
+      price: Number(price),
+      category,
+      sizes,
+      images: processedImages,
     }
-
-    // console.log("ProductData: ", productData)
 
     const product = await Product.create(productData)
 
@@ -80,34 +95,11 @@ export const addProduct = async (request: NextRequest) => {
       }
     }
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        success: false,
-        message: "Error creating product.",
-        err: error.message,
-      }
-    }
-  }
-}
-
-export const getProduct = async () => {
-  try {
-    await connectDb()
-
-    const response = await Product.find({})
-    if (response) {
-      return {
-        success: true,
-        products: response,
-      }
-    }
-  } catch (error) {
-    if (error instanceof Error) {
-      return {
-        success: false,
-        message: "Internal Server error.",
-        err: error.message,
-      }
+    console.error("Error in addProduct:", error)
+    return {
+      success: false,
+      message: "Error creating product.",
+      error: error instanceof Error ? error.message : "Unknown error",
     }
   }
 }

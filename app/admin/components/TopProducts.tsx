@@ -1,42 +1,42 @@
-'use client';
+"use client"
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, Package } from 'lucide-react';
+import React, { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { TrendingUp } from "lucide-react"
 
 interface TopProduct {
-  _id: string;
-  productName: string;
-  totalSales: number;
-  totalRevenue: number;
-  category: string;
+  _id: string
+  productName: string
+  totalSales: number
+  totalRevenue: number
+  category: string
 }
 
 const TopProducts = () => {
-  const [products, setProducts] = useState<TopProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [products, setProducts] = useState<TopProduct[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchTopProducts = async () => {
       try {
-        const response = await fetch('/api/product/top');
-        const data = await response.json();
-        
-        if (data.success) {
-          setProducts(data.data);
-        } else {
-          setError(data.message);
-        }
-      } catch (err) {
-        setError('Failed to fetch top products');
-      } finally {
-        setLoading(false);
-      }
-    };
+        const response = await fetch("/api/product/top")
+        const data = await response.json()
 
-    fetchTopProducts();
-  }, []);
+        if (data.success) {
+          setProducts(data.data)
+        } else {
+          setError(data.message)
+        }
+      } catch {
+        setError("Failed to fetch top products")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchTopProducts()
+  }, [])
 
   if (loading) {
     return (
@@ -58,7 +58,7 @@ const TopProducts = () => {
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   if (error) {
@@ -71,7 +71,7 @@ const TopProducts = () => {
           <p className="text-red-500">Error: {error}</p>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -91,7 +91,9 @@ const TopProducts = () => {
             >
               <div>
                 <h3 className="font-medium">{product.productName}</h3>
-                <p className="text-sm text-muted-foreground">{product.category}</p>
+                <p className="text-sm text-muted-foreground">
+                  {product.category}
+                </p>
               </div>
               <div className="text-right">
                 <p className="font-semibold">{product.totalSales} sold</p>
@@ -104,7 +106,7 @@ const TopProducts = () => {
         </div>
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
-export default TopProducts;
+export default TopProducts

@@ -29,7 +29,7 @@ export const DELETE = async (
   } catch (error) {
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : "Something wrong",
+      error: error instanceof Error ? error.message : "Something Wrong.",
     })
   }
 }

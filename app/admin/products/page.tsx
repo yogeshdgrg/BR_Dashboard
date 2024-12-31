@@ -87,10 +87,10 @@ export default function ProductList() {
     setTimeout(() => setSelectedProduct(null), 300)
   }
 
-  const handleAddProduct = async () => {
-    await fetchProducts()
-    setIsAddFormOpen(false)
-  }
+  // const handleAddProduct = async () => {
+  //   await fetchProducts()
+  //   setIsAddFormOpen(false)
+  // }
 
   if (loading) {
     return <LoadingSkeleton />
