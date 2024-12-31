@@ -46,12 +46,17 @@ export const addProduct = async (request: NextRequest) => {
 
     // Process additional images - Fixed to handle multiple files
     const processedImages = []
-    
+
     // Get all form entries and filter for additionalImages
     const formEntries = Array.from(formData.entries())
-    const additionalImagesEntries = formEntries.filter(([key]) => key === 'additionalImages')
-    
-    console.log("Number of additional images found:", additionalImagesEntries.length)
+    const additionalImagesEntries = formEntries.filter(
+      ([key]) => key === "additionalImages"
+    )
+
+    console.log(
+      "Number of additional images found:",
+      additionalImagesEntries.length
+    )
 
     // Process each additional image
     for (const [_, imageFile] of additionalImagesEntries) {
@@ -100,6 +105,28 @@ export const addProduct = async (request: NextRequest) => {
       success: false,
       message: "Error creating product.",
       error: error instanceof Error ? error.message : "Unknown error",
+    }
+  }
+}
+
+export const getProduct = async () => {
+  try {
+    await connectDb()
+    const response = await Product.find({})
+    if (!response) {
+      return {
+        success: false,
+        message: "No product found.",
+      }
+    }
+    return {
+      success: true,
+      message: "Successfully fetched.",
+      response,
+    }
+  } catch (err) {
+    return {
+      message: err instanceof Error ? err.message : "Something wrong",
     }
   }
 }
