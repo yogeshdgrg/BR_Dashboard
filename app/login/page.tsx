@@ -25,7 +25,7 @@ export default function LoginPage() {
       })
 
       const data = await res.json()
-      console.log("Data in frontend : ",data)
+      console.log("Data in frontend : ", data)
 
       if (!data.ok) {
         setError(data.error || "Invalid credentials")
@@ -36,7 +36,7 @@ export default function LoginPage() {
       setIsSubmitting(false)
       router.push("/admin")
       toast.success("Login successful")
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred.")
     }
   }

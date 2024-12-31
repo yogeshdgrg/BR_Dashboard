@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { toast } from "sonner"
+import Image from "next/image"
 
 const AddProductForm = ({ isOpen, onClose, fetchProducts }) => {
   const [formData, setFormData] = useState({
@@ -63,7 +64,7 @@ const AddProductForm = ({ isOpen, onClose, fetchProducts }) => {
         body: formDataToSend,
       })
 
-      // if (!response.ok) throw new Error("Failed to add product")
+      if (!response.ok) throw new Error("Failed to add product")
 
       // Reset form
       setFormData({
@@ -254,7 +255,7 @@ const AddProductForm = ({ isOpen, onClose, fetchProducts }) => {
             <div className="border-2 border-dashed rounded-lg p-4 text-center">
               {mainImagePreview ? (
                 <div className="relative w-full aspect-square">
-                  <img
+                  <Image
                     src={mainImagePreview}
                     alt="Product preview"
                     className="w-full h-full object-contain rounded"
@@ -311,7 +312,7 @@ const AddProductForm = ({ isOpen, onClose, fetchProducts }) => {
               {colorVariants.map((color, index) => (
                 <Card key={index} className="relative">
                   <CardContent className="p-3">
-                    <img
+                    <Image
                       src={color.preview}
                       alt={color.name}
                       className="w-full aspect-square object-cover rounded mb-2"

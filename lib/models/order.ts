@@ -11,6 +11,7 @@ export interface IOrder extends Document {
   quantity: number
   message: string
   status: string
+  createdAt: Date // Add createdAt field
 }
 
 const orderSchema = new Schema<IOrder>({
@@ -49,7 +50,12 @@ const orderSchema = new Schema<IOrder>({
   },
   status: {
     type: String,
-    default:"pending"
+    default: "pending",
+  },
+  createdAt: {
+    // Add this field
+    type: Date,
+    default: Date.now,
   },
 })
 

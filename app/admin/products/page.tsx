@@ -6,6 +6,17 @@ import Image from "next/image"
 import { Skeleton } from "@/components/ui/skeleton"
 import AddProductForm from "./AddProductForm"
 import { toast } from "sonner"
+import DeleteConfirmationModal from "../components/DeleteConfirmationModal"
+// import {
+//   AlertDialog,
+//   AlertDialogAction,
+//   AlertDialogCancel,
+//   AlertDialogContent,
+//   AlertDialogDescription,
+//   AlertDialogFooter,
+//   AlertDialogHeader,
+//   AlertDialogTitle,
+// } from "@/components/ui/alert-dialog"
 
 export default function ProductList() {
   const [products, setProducts] = useState([])
@@ -13,6 +24,8 @@ export default function ProductList() {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isAddFormOpen, setIsAddFormOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [productToDelete, setProductToDelete] = useState(null)
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -31,15 +44,22 @@ export default function ProductList() {
     fetchProducts()
   }, [fetchProducts])
 
-  const handleDelete = async (productId) => {
+  const handleDeleteClick = (product) => {
+    setProductToDelete(product)
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleDelete = async () => {
+    if (!productToDelete) return
+
     try {
-      const response = await fetch(`/api/product/${productId}`, {
+      const response = await fetch(`/api/product/${productToDelete._id}`, {
         method: "DELETE",
       })
       const data = await response.json()
 
       if (data.success) {
-        await fetchProducts() // Fetch fresh data after deletion
+        await fetchProducts()
         toast.success("Product deleted successfully")
       } else {
         toast.error(data.message || "Failed to delete product")
@@ -47,11 +67,14 @@ export default function ProductList() {
     } catch (error) {
       console.error("Error deleting product:", error)
       toast.error("Error deleting product")
+    } finally {
+      setIsDeleteModalOpen(false)
+      setProductToDelete(null)
     }
   }
 
   const handleProductUpdate = async () => {
-    await fetchProducts() // Fetch fresh data after update
+    await fetchProducts()
   }
 
   const handleEdit = (product) => {
@@ -64,10 +87,10 @@ export default function ProductList() {
     setTimeout(() => setSelectedProduct(null), 300)
   }
 
-  const handleAddProduct = async () => {
-    await fetchProducts() // Fetch fresh data after adding
-    setIsAddFormOpen(false)
-  }
+  // const handleAddProduct = async () => {
+  //   await fetchProducts()
+  //   setIsAddFormOpen(false)
+  // }
 
   if (loading) {
     return <LoadingSkeleton />
@@ -112,7 +135,7 @@ export default function ProductList() {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(product._id)}
+                      onClick={() => handleDeleteClick(product)}
                       className="text-red-600 hover:text-red-900"
                     >
                       Delete
@@ -200,10 +223,13 @@ export default function ProductList() {
                       Rs.{product.price}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex space-x-2">
+                  <td className="px-6 py-4 ">
+                    <div className="grid grid-cols-2 gap-2 max-h-16 overflow-hidden">
                       {product.colors.map((color) => (
-                        <div key={color._id} className="relative w-6 h-6">
+                        <div
+                          key={color._id}
+                          className="relative w-6 h-6 rounded-full border border-gray-200"
+                        >
                           <Image
                             src={color.image}
                             alt={color.name}
@@ -214,7 +240,8 @@ export default function ProductList() {
                       ))}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex flex-col gap-3">
                     <button
                       className="text-blue-600 hover:text-blue-900 mr-4"
                       onClick={() => handleEdit(product)}
@@ -222,7 +249,7 @@ export default function ProductList() {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDelete(product._id)}
+                      onClick={() => handleDeleteClick(product)}
                       className="text-red-600 hover:text-red-900"
                     >
                       Delete
@@ -234,17 +261,46 @@ export default function ProductList() {
         </table>
       </div>
 
+      {/* Delete Confirmation Modal */}
+      {/* <AlertDialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete{" "}
+              <span className="font-medium">{productToDelete?.name}</span> and
+              remove its data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog> */}
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+        productName={productToDelete?.name || ""}
+      />
+
       <EditProductSidebar
         isOpen={isSidebarOpen}
         onClose={handleCloseSidebar}
         product={selectedProduct}
-        onUpdate={handleProductUpdate} // This is important
+        onUpdate={handleProductUpdate}
       />
 
       <AddProductForm
         isOpen={isAddFormOpen}
         onClose={() => setIsAddFormOpen(false)}
-        // onAdd={handleAddProduct} // This is important
         fetchProducts={fetchProducts}
       />
     </div>
