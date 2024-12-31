@@ -19,20 +19,51 @@ import {
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
 
+interface Product {
+  _id: number;
+  name: string;
+  description: string;
+  img: string;
+  category: string;
+  sizes: string[];
+  dimensions: { length: string; width: string; height: string } | null;
+  images: Images[];
+  feature: string[];
+  price: number;
+}
+
+interface Images {
+  _id: number;
+  image: string;
+}
+
+export interface IOrder {
+  _id: string; // Assuming it's a string, if it's number change this type.
+  name: string;
+  email: string;
+  phone: string;
+  product: Product;
+  color: string;
+  quantity: number;
+  message: string;
+  status: string;
+  createdAt: Date;
+}
+
 export default function OrdersPage() {
-  const [orders, setOrders] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [selectedOrder, setSelectedOrder] = useState(null)
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [updatingStatus, setUpdatingStatus] = useState(false)
-  const [newStatus, setNewStatus] = useState("")
+  const [orders, setOrders] = useState<IOrder[]>([]) // Typing orders array
+  const [loading, setLoading] = useState<boolean>(true) // Typing loading state
+  const [selectedOrder, setSelectedOrder] = useState<IOrder | null>(null) // Typing selectedOrder
+  const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false) // Typing details state
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "delivered">("all") // Filter status typing
+  const [updatingStatus, setUpdatingStatus] = useState<boolean>(false) // Typing updatingStatus state
+  const [newStatus, setNewStatus] = useState<string>("") // Typing newStatus state
 
   useEffect(() => {
     fetchOrders()
   }, [])
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (): Promise<void> => {
     try {
       const response = await fetch("/api/order")
       const data = await response.json()
@@ -46,7 +77,7 @@ export default function OrdersPage() {
     }
   }
 
-  const updateOrderStatus = async (orderId) => {
+  const updateOrderStatus = async (orderId: string): Promise<void> => { // Order ID should be a string
     if (!newStatus) return
 
     setUpdatingStatus(true)
@@ -58,21 +89,21 @@ export default function OrdersPage() {
         },
         body: JSON.stringify({ status: newStatus }),
       })
-      
+
       const data = await response.json()
-      
+
       if (data.success) {
         // Update the orders state directly instead of fetching again
-        setOrders(prevOrders => 
-          prevOrders.map(order => 
-            order._id === orderId 
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order._id === orderId
               ? { ...order, status: newStatus }
               : order
           )
         )
-        
+
         // Update the selected order state
-        setSelectedOrder(prev => ({ ...prev, status: newStatus }))
+        setSelectedOrder((prev) => (prev ? { ...prev, status: newStatus } : null))
       }
     } catch (error) {
       console.error("Error updating order status:", error)
@@ -85,7 +116,7 @@ export default function OrdersPage() {
     statusFilter === "all" ? true : order.status.toLowerCase() === statusFilter
   )
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): string => {
     switch (status.toLowerCase()) {
       case "delivered":
         return "bg-green-100 text-green-800"
@@ -96,7 +127,7 @@ export default function OrdersPage() {
     }
   }
 
-  const handleOrderSelect = (order) => {
+  const handleOrderSelect = (order: IOrder): void => {
     setSelectedOrder(order)
     setNewStatus(order.status.toLowerCase())
     setIsDetailsOpen(true)
@@ -138,7 +169,7 @@ export default function OrdersPage() {
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-2xl font-bold text-gray-900">Orders</h2>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as "all" | "pending" | "delivered")}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Filter Status" />
           </SelectTrigger>
@@ -242,6 +273,8 @@ export default function OrdersPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Order Details Sheet */}
       <Sheet open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <SheetContent className="sm:max-w-xl overflow-y-auto">
           <SheetHeader className="sticky top-0 bg-white pb-6 z-10">
@@ -250,9 +283,7 @@ export default function OrdersPage() {
           {selectedOrder && (
             <div className="space-y-6 pb-6">
               <div className="space-y-2">
-                <h3 className="font-medium text-gray-900">
-                  Customer Information
-                </h3>
+                <h3 className="font-medium text-gray-900">Customer Information</h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-gray-500">Name</p>
@@ -278,9 +309,7 @@ export default function OrdersPage() {
                   </div>
                   <div>
                     <p className="text-gray-500">Price</p>
-                    <p className="font-medium">
-                      ${selectedOrder.product.price}
-                    </p>
+                    <p className="font-medium">${selectedOrder.product.price}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">Quantity</p>
@@ -325,9 +354,7 @@ export default function OrdersPage() {
 
               {selectedOrder.product.dimensions && (
                 <div className="space-y-2">
-                  <h3 className="font-medium text-gray-900">
-                    Product Dimensions
-                  </h3>
+                  <h3 className="font-medium text-gray-900">Product Dimensions</h3>
                   <div className="grid grid-cols-3 gap-4 text-sm">
                     <div>
                       <p className="text-gray-500">Length</p>

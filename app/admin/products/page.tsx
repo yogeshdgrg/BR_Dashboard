@@ -29,7 +29,7 @@ export default function ProductList() {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await fetch("/api/product")
+      const response = await fetch("http://localhost:3000/api/product")
       const data = await response.json()
       setProducts(data.products)
     } catch (error) {
