@@ -43,50 +43,6 @@ export const GET = async (
   }
 }
 
-// export const DELETE = async (
-//   req: NextRequest,
-//   { params }: { params: { id: string } }
-// ) => {
-//   try {
-//     const { id } = params
-//     // console.log("I am id : ", id)
-
-//     if (!id) {
-//       return NextResponse.json({
-//         success: false,
-//         message: "Product ID is required",
-//       })
-//     }
-//     await connectDb()
-
-//     const product = await Product.findByIdAndDelete(id, {
-//       new: true,
-//     })
-//     if (!product) {
-//       return NextResponse.json({
-//         success: false,
-//         message: "Product not deleted.",
-//       })
-//     }
-
-//     return NextResponse.json({
-//       success: true,
-//       product,
-//       message: "Product deleted successfully.",
-//     })
-//   } catch (error) {
-//     if (error instanceof Error) {
-//       return NextResponse.json({
-//         success: false,
-//         message: "Internal Server Error",
-//         error: error.message,
-//       })
-//     }
-//   }
-// }
-
-// app/api/product/[id]/route.ts
-
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -138,123 +94,105 @@ export async function DELETE(
   }
 }
 
-// export async function PUT(
+
+// export const PUT = async (
 //   request: NextRequest,
 //   { params }: { params: { id: string } }
-// ) {
-//   const response = await updateProduct(request, { params })
-//   return Response.json(response)
+// ) => {
+//   const { id } = await params
+//   try {
+//     // Validate product ID
+//     if (!Types.ObjectId.isValid(id)) {
+//       return {
+//         success: false,
+//         message: "Invalid product ID format",
+//       }
+//     }
+
+//     await connectDb()
+//     const formData = await request.formData()
+
+//     // Get existing product
+//     const existingProduct = await Product.findById(id)
+//     if (!existingProduct) {
+//       return {
+//         success: false,
+//         message: "Product not found",
+//       }
+//     }
+
+//     // Initialize update object with existing data
+//     const updateData = {
+//       name: formData.get("name") || existingProduct.name,
+//       description: formData.get("description") || existingProduct.description,
+//       price: formData.get("price")
+//         ? Number(formData.get("price"))
+//         : existingProduct.price,
+//       category: formData.get("category") || existingProduct.category,
+//       sizes: formData.get("sizes")
+//         ? JSON.parse(formData.get("sizes") as string)
+//         : existingProduct.sizes,
+//       feature: formData.get("feature")
+//         ? JSON.parse(formData.get("feature") as string)
+//         : existingProduct.feature,
+//     }
+
+//     // Handle additional images update
+//     const formEntries = Array.from(formData.entries())
+//     const additionalImagesEntries = formEntries.filter(
+//       ([key]) => key === "additionalImages"
+//     )
+
+//     if (additionalImagesEntries.length > 0) {
+//       const processedImages = []
+
+//       for (const [_, imageFile] of additionalImagesEntries) {
+//         if (imageFile instanceof File && imageFile.size > 0) {
+//           try {
+//             const imageUrl = await uploadToCloudinary(
+//               imageFile,
+//               "products/additional"
+//             )
+//             processedImages.push({
+//               image: imageUrl,
+//             })
+//           } catch (error) {
+//             console.error("Error uploading additional image:", error)
+//             // Continue with other images even if one fails
+//           }
+//         }
+//       }
+
+//       if (processedImages.length > 0) {
+//         updateData.images = processedImages
+//       }
+//     }
+
+//     // Update product with new data
+//     const updatedProduct = await Product.findByIdAndUpdate(
+//       id,
+//       { $set: updateData },
+//       { new: true, runValidators: true }
+//     )
+
+//     if (!updatedProduct) {
+//       return {
+//         success: false,
+//         message: "Failed to update product",
+//       }
+//     }
+
+//     return {
+//       success: true,
+//       message: "Product updated successfully",
+//       product: updatedProduct,
+//     }
+//   } catch (error) {
+//     console.error("Error updating product:", error)
+//     return {
+//       success: false,
+//       message: "Error updating product",
+//       error: error instanceof Error ? error.message : "Unknown error occurred",
+//     }
+//   }
 // }
-
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await connectDb()
-    const { id } = params
-
-    const formData = await request.formData()
-
-    // Extract basic product data
-    const name = formData.get("name")
-    const description = formData.get("description")
-    const price = formData.get("price")
-    const category = formData.get("category")
-    const dimensions = JSON.parse(formData.get("dimensions") as string)
-
-    // Find existing product
-    const existingProduct = await Product.findById(id)
-    if (!existingProduct) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Product not found",
-        },
-        { status: 404 }
-      )
-    }
-
-    // Handle main product image
-    let mainImageUrl = existingProduct.img
-    const mainImage = formData.get("img") as File
-    if (mainImage && mainImage.size > 0) {
-      mainImageUrl = await uploadToCloudinary(mainImage)
-    }
-
-    // Handle color variants
-    const colorsData = JSON.parse(formData.get("colors") as string)
-    const updatedColors = []
-
-    for (const colorData of colorsData) {
-      const colorImageFile = formData.get(`color_image_${colorData.id}`) as File
-
-      // If it's an existing color
-      const existingColor = existingProduct.colors.find(
-        (c) => c._id.toString() === colorData.id
-      )
-
-      if (existingColor) {
-        // Update existing color
-        const colorInfo = {
-          _id: existingColor._id,
-          name: colorData.name,
-          image: existingColor.image, // Keep existing image by default
-        }
-
-        // Update image if new one provided
-        if (colorImageFile && colorImageFile.size > 0) {
-          colorInfo.image = await uploadToCloudinary(
-            colorImageFile,
-            "product_colors"
-          )
-        }
-
-        updatedColors.push(colorInfo)
-      } else {
-        // Add new color
-        if (colorImageFile && colorImageFile.size > 0) {
-          const newImageUrl = await uploadToCloudinary(
-            colorImageFile,
-            "product_colors"
-          )
-          updatedColors.push({
-            name: colorData.name,
-            image: newImageUrl,
-          })
-        }
-      }
-    }
-
-    // Update product in database
-    const updatedProduct = await Product.findByIdAndUpdate(
-      id,
-      {
-        name,
-        description,
-        img: mainImageUrl,
-        price: Number(price),
-        category,
-        dimensions,
-        colors: updatedColors,
-      },
-      { new: true }
-    )
-
-    return NextResponse.json({
-      success: true,
-      message: "Product updated successfully",
-      product: updatedProduct,
-    })
-  } catch (error) {
-    console.error("Update error:", error)
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Error updating product",
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    )
-  }
-}

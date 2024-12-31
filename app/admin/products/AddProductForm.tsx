@@ -1,402 +1,235 @@
-import React, { useState } from "react"
-import { X, Upload, Plus, Trash2 } from "lucide-react"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Card, CardContent } from "@/components/ui/card"
-import { toast } from "sonner"
-import Image from "next/image"
+"use client"
 
-const AddProductForm = ({ isOpen, onClose, fetchProducts }) => {
+import { useState } from "react"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { toast } from "sonner"
+import { X, ImagePlus, Trash2 } from "lucide-react"
+
+export default function AddProductForm({ isOpen, onClose, onSuccess }:{isOpen:boolean,onClose:()=>void}) {
+  const [loading, setLoading] = useState(false)
+  const [uploadingImages, setUploadingImages] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    price: "",
     category: "",
-    dimensions: {
-      length: "",
-      width: "",
-      height: "",
-    },
-    img: null,
+    sizes: [],
+    images: [],
+    feature: []
   })
 
-  const [mainImagePreview, setMainImagePreview] = useState("")
-  const [colorVariants, setColorVariants] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [showColorDialog, setShowColorDialog] = useState(false)
-  const [newColor, setNewColor] = useState({ name: "", file: null })
+  const handleImageUpload = async (e) => {
+    const files = Array.from(e.target.files)
+    setUploadingImages(true)
+
+    try {
+      const uploadPromises = files.map(async (file) => {
+        const formData = new FormData()
+        formData.append("file", file)
+        formData.append("upload_preset", "your_cloudinary_upload_preset")
+
+        const response = await fetch(
+          "https://api.cloudinary.com/v1_1/your_cloud_name/image/upload",
+          {
+            method: "POST",
+            body: formData,
+          }
+        )
+
+        const data = await response.json()
+        return { image: data.secure_url }
+      })
+
+      const uploadedImages = await Promise.all(uploadPromises)
+      setFormData((prev) => ({
+        ...prev,
+        images: [...prev.images, ...uploadedImages],
+      }))
+      toast.success("Images uploaded successfully")
+    } catch (error) {
+      toast.error("Failed to upload images")
+    } finally {
+      setUploadingImages(false)
+    }
+  }
+
+  const removeImage = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index),
+    }))
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
 
-    const formDataToSend = new FormData()
-    Object.keys(formData).forEach((key) => {
-      if (key === "dimensions") {
-        formDataToSend.append(key, JSON.stringify(formData[key]))
-      } else if (key !== "img") {
-        formDataToSend.append(key, formData[key])
-      }
-    })
-
-    if (formData.img) {
-      formDataToSend.append("img", formData.img)
-    }
-
-    formDataToSend.append(
-      "colors",
-      JSON.stringify(colorVariants.map(({ name }) => ({ name, image: "" })))
-    )
-
-    colorVariants.forEach((color) => {
-      if (color.file) {
-        formDataToSend.append(`color_${color.name}`, color.file)
-      }
-    })
-
     try {
       const response = await fetch("/api/product", {
         method: "POST",
-        body: formDataToSend,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
       })
 
-      if (!response.ok) throw new Error("Failed to add product")
+      const data = await response.json()
 
-      // Reset form
-      setFormData({
-        name: "",
-        description: "",
-        price: "",
-        category: "",
-        dimensions: { length: "", width: "", height: "" },
-        img: null,
-      })
-      setColorVariants([])
-      setMainImagePreview("")
-
-      // Call the onAdd callback to refresh the product list
-      // if (onAdd) {
-      //   await onAdd()
-      // }
-
-      onClose()
-      fetchProducts()
+      if (data.success) {
+        toast.success("Product added successfully")
+        setFormData({
+          name: "",
+          description: "",
+          category: "",
+          sizes: [],
+          images: [],
+          feature: []
+        })
+        onSuccess()
+      } else {
+        toast.error(data.message || "Failed to add product")
+      }
     } catch (error) {
-      console.error("Error adding product:", error)
-      toast.error("Failed to add product")
+      toast.error("Error adding product")
     } finally {
       setLoading(false)
     }
   }
-  const handleImageChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      setFormData((prev) => ({ ...prev, img: file }))
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setMainImagePreview(reader.result)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const handleColorImageChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      setNewColor((prev) => ({ ...prev, file }))
-    }
-  }
-
-  const addColorVariant = () => {
-    if (newColor.name && newColor.file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setColorVariants((prev) => [
-          ...prev,
-          {
-            ...newColor,
-            preview: reader.result,
-          },
-        ])
-        setNewColor({ name: "", file: null })
-        setShowColorDialog(false)
-      }
-      reader.readAsDataURL(newColor.file)
-    }
-  }
-
-  const removeColorVariant = (index) => {
-    setColorVariants((prev) => prev.filter((_, i) => i !== index))
-  }
 
   return (
-    <div
-      className={`fixed inset-y-0 right-0 w-full sm:w-96 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
-        isOpen ? "translate-x-0" : "translate-x-full"
-      } overflow-hidden`}
-    >
-      <div className="h-full flex flex-col">
-        <div className="flex justify-between items-center p-4 border-b">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px]">
+        <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">Add New Product</h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
-            <X className="w-5 h-5" />
-          </button>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="flex-1 overflow-y-auto p-4 space-y-4"
-        >
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">Name</label>
-            <input
-              type="text"
-              required
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, name: e.target.value }))
-              }
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">Description</label>
-            <textarea
-              required
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-              rows={3}
-              value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="block text-sm font-medium">Price</label>
-              <input
-                type="number"
-                required
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-                value={formData.price}
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={formData.name}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, price: e.target.value }))
+                  setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
+                required
               />
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-medium">Category</label>
-              <input
-                type="text"
-                required
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+              <Label htmlFor="category">Category</Label>
+              <Input
+                id="category"
                 value={formData.category}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, category: e.target.value }))
                 }
+                required
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium">Dimensions</label>
-            <div className="grid grid-cols-3 gap-2">
-              <input
-                type="text"
-                placeholder="Length"
-                className="p-2 border rounded focus:ring-2 focus:ring-blue-500"
-                value={formData.dimensions.length}
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, description: e.target.value }))
+              }
+              required
+              rows={4}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Sizes (comma-separated)</Label>
+              <Input
+                value={formData.sizes.join(", ")}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    dimensions: { ...prev.dimensions, length: e.target.value },
+                    sizes: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
                   }))
                 }
+                placeholder="S, M, L, XL"
               />
-              <input
-                type="text"
-                placeholder="Width"
-                className="p-2 border rounded focus:ring-2 focus:ring-blue-500"
-                value={formData.dimensions.width}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Features (comma-separated)</Label>
+              <Input
+                value={formData.feature.join(", ")}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    dimensions: { ...prev.dimensions, width: e.target.value },
+                    feature: e.target.value.split(",").map((f) => f.trim()).filter(Boolean),
                   }))
                 }
-              />
-              <input
-                type="text"
-                placeholder="Height"
-                className="p-2 border rounded focus:ring-2 focus:ring-blue-500"
-                value={formData.dimensions.height}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    dimensions: { ...prev.dimensions, height: e.target.value },
-                  }))
-                }
+                placeholder="Feature 1, Feature 2, Feature 3"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium">Product Image</label>
-            <div className="border-2 border-dashed rounded-lg p-4 text-center">
-              {mainImagePreview ? (
-                <div className="relative w-full aspect-square">
-                  <Image
-                    src={mainImagePreview}
-                    alt="Product preview"
-                    className="w-full h-full object-contain rounded"
+            <Label>Product Images</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <ImagePlus className="w-8 h-8 mb-2 text-gray-500" />
+                      <p className="text-sm text-gray-500">Click to upload images</p>
+                    </div>
+                    <Input
+                      type="file"
+                      className="hidden"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploadingImages}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {formData.images.map((img, index) => (
+                <div key={index} className="relative group">
+                  <img
+                    src={img.image}
+                    alt={`Product ${index + 1}`}
+                    className="w-full h-24 object-cover rounded-lg"
                   />
                   <button
                     type="button"
-                    onClick={() => {
-                      setFormData((prev) => ({ ...prev, img: null }))
-                      setMainImagePreview("")
-                    }}
-                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                    onClick={() => removeImage(index)}
+                    className="absolute top-2 right-2 p-1 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <X className="w-4 h-4" />
+                    <Trash2 className="w-4 h-4 text-white" />
                   </button>
                 </div>
-              ) : (
-                <div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    id="productImage"
-                    onChange={handleImageChange}
-                  />
-                  <label
-                    htmlFor="productImage"
-                    className="cursor-pointer flex flex-col items-center"
-                  >
-                    <Upload className="w-8 h-8 text-gray-400" />
-                    <span className="mt-2 text-sm text-gray-500">
-                      Upload product image
-                    </span>
-                  </label>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label className="block text-sm font-medium">
-                Color Variants
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowColorDialog(true)}
-                className="p-1 text-blue-600 hover:bg-blue-50 rounded-full"
-              >
-                <Plus className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              {colorVariants.map((color, index) => (
-                <Card key={index} className="relative">
-                  <CardContent className="p-3">
-                    <Image
-                      src={color.preview}
-                      alt={color.name}
-                      className="w-full aspect-square object-cover rounded mb-2"
-                    />
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">{color.name}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeColorVariant(index)}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </CardContent>
-                </Card>
               ))}
             </div>
           </div>
-        </form>
 
-        <div className="border-t p-4">
-          <button
-            type="submit"
-            disabled={loading}
-            onClick={handleSubmit}
-            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-300"
-          >
-            {loading ? "Adding..." : "Add Product"}
-          </button>
-        </div>
-      </div>
-
-      <Dialog open={showColorDialog} onOpenChange={setShowColorDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Color Variant</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">Color Name</label>
-              <input
-                type="text"
-                value={newColor.name}
-                onChange={(e) =>
-                  setNewColor((prev) => ({ ...prev, name: e.target.value }))
-                }
-                placeholder="Enter color name"
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="block text-sm font-medium">Color Image</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleColorImageChange}
-                className="w-full"
-              />
-            </div>
-
-            <div className="flex justify-end space-x-2">
-              <button
-                type="button"
-                onClick={() => setShowColorDialog(false)}
-                className="px-4 py-2 border rounded-md hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={addColorVariant}
-                disabled={!newColor.name || !newColor.file}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300"
-              >
-                Add Color
-              </button>
-            </div>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading || uploadingImages}>
+              {loading ? "Adding..." : "Add Product"}
+            </Button>
           </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }
-
-export default AddProductForm
