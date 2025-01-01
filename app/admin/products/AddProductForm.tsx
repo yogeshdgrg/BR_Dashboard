@@ -1,12 +1,38 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, FormEvent } from "react"
 import { X, Upload, Loader2, ImagePlus, Trash2 } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
 
-export default function AddProductForm({ isOpen, onClose, onProductAdded }) {
-  const [formData, setFormData] = useState({
+interface AddProductFormProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onProductAdded: () => void;
+}
+
+interface FormData {
+  name: string;
+  description: string;
+  category: string;
+  sizes: string[];
+  feature: string[];
+  images: File[];
+}
+
+interface PreviewImage {
+  url: string;
+  file: File;
+  name?: string;
+  size?: string;
+}
+
+export default function AddProductForm({
+  isOpen,
+  onClose,
+  onProductAdded,
+}: AddProductFormProps) {
+  const [formData, setFormData] = useState<FormData>({
     name: "",
     description: "",
     category: "",
@@ -15,29 +41,29 @@ export default function AddProductForm({ isOpen, onClose, onProductAdded }) {
     images: [],
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [previewImages, setPreviewImages] = useState([])
+  const [previewImages, setPreviewImages] = useState<PreviewImage[]>([])
   const [sizeInput, setSizeInput] = useState("")
   const [featureInput, setFeatureInput] = useState("")
   const [isDragging, setIsDragging] = useState(false)
 
-  const handleDragEnter = (e) => {
+  const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setIsDragging(true)
   }
 
-  const handleDragLeave = (e) => {
+  const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setIsDragging(false)
   }
 
-  const handleDragOver = (e) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
   }
 
-  const handleDrop = (e) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setIsDragging(false)
@@ -51,7 +77,6 @@ export default function AddProductForm({ isOpen, onClose, onProductAdded }) {
       return
     }
 
-    // Process the dropped files
     const newPreviewImages = files.map((file) => ({
       url: URL.createObjectURL(file),
       file,
@@ -60,8 +85,8 @@ export default function AddProductForm({ isOpen, onClose, onProductAdded }) {
     setPreviewImages((prev) => [...prev, ...newPreviewImages])
   }
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files)
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
 
     const newPreviewImages = files.map((file) => ({
       url: URL.createObjectURL(file),
@@ -73,7 +98,7 @@ export default function AddProductForm({ isOpen, onClose, onProductAdded }) {
     setPreviewImages((prev) => [...prev, ...newPreviewImages])
   }
 
-  const removeImage = (index) => {
+  const removeImage = (index: number) => {
     URL.revokeObjectURL(previewImages[index].url) // Clean up URL object
     setPreviewImages((prev) => prev.filter((_, i) => i !== index))
   }
@@ -98,21 +123,21 @@ export default function AddProductForm({ isOpen, onClose, onProductAdded }) {
     }
   }
 
-  const removeSize = (index) => {
+  const removeSize = (index: number) => {
     setFormData((prev) => ({
       ...prev,
       sizes: prev.sizes.filter((_, i) => i !== index),
     }))
   }
 
-  const removeFeature = (index) => {
+  const removeFeature = (index: number) => {
     setFormData((prev) => ({
       ...prev,
       feature: prev.feature.filter((_, i) => i !== index),
     }))
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
@@ -156,7 +181,7 @@ export default function AddProductForm({ isOpen, onClose, onProductAdded }) {
       } else {
         throw new Error(data.message || "Failed to add product")
       }
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error.message)
     } finally {
       setIsSubmitting(false)
