@@ -39,7 +39,9 @@ export const addProduct = async (request: NextRequest) => {
     )
 
     // Process each additional image
-    for (const [_, imageFile] of additionalImagesEntries) {
+    for (const [key, imageFile] of additionalImagesEntries) {
+      console.log(key)
+
       if (imageFile instanceof File) {
         try {
           console.log("Processing additional image:", imageFile.name)
