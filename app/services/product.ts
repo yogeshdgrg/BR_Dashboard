@@ -66,9 +66,13 @@ export const addProduct = async (request: NextRequest) => {
       price: Number(price),
       category,
       sizes,
-      images: processedImages,
+      images: processedImages,  // Additional images array
       feature,
+      // Assign the first image from the additional images as the main image
+      img: processedImages.length > 0 ? processedImages[0].image : '',  // Main image field
     }
+
+    console.log(productData)
 
     const product = await Product.create(productData)
 

@@ -7,9 +7,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
-import { X, ImagePlus, Trash2 } from "lucide-react"
+import { X, ImagePlus, Trash2, Router } from "lucide-react"
 
-export default function AddProductForm({ isOpen, onClose, onSuccess }:{isOpen:boolean,onClose:()=>void}) {
+export default function AddProductForm({
+  isOpen,
+  onClose,
+  onSuccess,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  onSuccess: () => void
+}) {
   const [loading, setLoading] = useState(false)
   const [uploadingImages, setUploadingImages] = useState(false)
   const [formData, setFormData] = useState({
@@ -17,63 +25,46 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }:{isOpen:bo
     description: "",
     category: "",
     sizes: [],
-    images: [],
-    feature: []
+    feature: [],
+    additionalImages: [] as File[], // This will hold the selected files
   })
 
-  const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files)
-    setUploadingImages(true)
-
-    try {
-      const uploadPromises = files.map(async (file) => {
-        const formData = new FormData()
-        formData.append("file", file)
-        formData.append("upload_preset", "your_cloudinary_upload_preset")
-
-        const response = await fetch(
-          "https://api.cloudinary.com/v1_1/your_cloud_name/image/upload",
-          {
-            method: "POST",
-            body: formData,
-          }
-        )
-
-        const data = await response.json()
-        return { image: data.secure_url }
-      })
-
-      const uploadedImages = await Promise.all(uploadPromises)
-      setFormData((prev) => ({
-        ...prev,
-        images: [...prev.images, ...uploadedImages],
-      }))
-      toast.success("Images uploaded successfully")
-    } catch (error) {
-      toast.error("Failed to upload images")
-    } finally {
-      setUploadingImages(false)
-    }
-  }
-
-  const removeImage = (index) => {
+  const removeImage = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index),
+      additionalImages: prev.additionalImages.filter((_, i) => i !== index), // Remove the image at the specific index
     }))
   }
 
-  const handleSubmit = async (e) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFormData((prev) => ({
+        ...prev,
+        additionalImages: [...prev.additionalImages, ...Array.from(e.target.files)], // Add the selected files to the state
+      }))
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+
+    const formDataToSend = new FormData()
+    formDataToSend.append("name", formData.name)
+    formDataToSend.append("description", formData.description)
+    formDataToSend.append("category", formData.category)
+    formDataToSend.append("sizes", JSON.stringify(formData.sizes))
+    formDataToSend.append("feature", JSON.stringify(formData.feature))
+
+    // Append all additional images to the formData
+    formData.additionalImages.forEach((file) => {
+      formDataToSend.append("additionalImages", file)
+    })
 
     try {
       const response = await fetch("/api/product", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+        body: formDataToSend,
       })
 
       const data = await response.json()
@@ -85,15 +76,16 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }:{isOpen:bo
           description: "",
           category: "",
           sizes: [],
-          images: [],
-          feature: []
+          feature: [],
+          additionalImages: [],
         })
+
         onSuccess()
       } else {
         toast.error(data.message || "Failed to add product")
       }
     } catch (error) {
-      toast.error("Error adding product")
+      // toast.error("Error adding product")
     } finally {
       setLoading(false)
     }
@@ -157,7 +149,10 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }:{isOpen:bo
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    sizes: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                    sizes: e.target.value
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean),
                   }))
                 }
                 placeholder="S, M, L, XL"
@@ -171,7 +166,10 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }:{isOpen:bo
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
-                    feature: e.target.value.split(",").map((f) => f.trim()).filter(Boolean),
+                    feature: e.target.value
+                      .split(",")
+                      .map((f) => f.trim())
+                      .filter(Boolean),
                   }))
                 }
                 placeholder="Feature 1, Feature 2, Feature 3"
@@ -194,29 +192,34 @@ export default function AddProductForm({ isOpen, onClose, onSuccess }:{isOpen:bo
                       className="hidden"
                       multiple
                       accept="image/*"
-                      onChange={handleImageUpload}
+                      onChange={handleImageChange}
                       disabled={uploadingImages}
                     />
                   </label>
                 </div>
               </div>
 
-              {formData.images.map((img, index) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={img.image}
-                    alt={`Product ${index + 1}`}
-                    className="w-full h-24 object-cover rounded-lg"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute top-2 right-2 p-1 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Trash2 className="w-4 h-4 text-white" />
-                  </button>
+              {/* Displaying selected images */}
+              {formData.additionalImages.length > 0 && (
+                <div className="flex gap-4 mt-4">
+                  {formData.additionalImages.map((file, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={URL.createObjectURL(file)} // Generate an object URL to preview the file
+                        alt={`Product ${index + 1}`}
+                        className="w-full h-24 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-2 right-2 p-1 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 className="w-4 h-4 text-white" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
