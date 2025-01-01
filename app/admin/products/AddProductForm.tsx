@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, FormEvent } from "react"
+import { useState, FormEvent } from "react"
 import { X, Upload, Loader2, ImagePlus, Trash2 } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
@@ -181,10 +181,16 @@ export default function AddProductForm({
       } else {
         throw new Error(data.message || "Failed to add product")
       }
-    } catch (error: any) {
-      toast.error(error.message)
+    } catch (error) {
+      if (error instanceof Error) {
+        // This ensures error.message is accessed only if it's an instance of Error
+        toast.error(error.message);
+      } else {
+        // Handle cases where the error might not be an instance of Error (for example, if it's a string or a custom object)
+        toast.error('An unexpected error occurred');
+      }
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
@@ -208,16 +214,18 @@ export default function AddProductForm({
           <div className="space-y-4">
             {/* Basic Information */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label htmlFor="Name" className="block text-sm font-medium text-gray-700">
                 Name
               </label>
               <input
                 type="text"
                 required
+                placeholder="Enter Name"
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
+              
                 }
               />
             </div>
@@ -228,6 +236,7 @@ export default function AddProductForm({
               </label>
               <textarea
                 required
+                placeholder="Your message"
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                 rows={3}
                 value={formData.description}
@@ -247,6 +256,7 @@ export default function AddProductForm({
               <input
                 type="text"
                 required
+                placeholder="enter Category"
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                 value={formData.category}
                 onChange={(e) =>
