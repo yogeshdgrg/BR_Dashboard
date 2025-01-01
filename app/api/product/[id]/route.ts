@@ -94,7 +94,6 @@ export async function DELETE(
   }
 }
 
-
 // export const PUT = async (
 //   request: NextRequest,
 //   { params }: { params: { id: string } }
@@ -125,9 +124,6 @@ export async function DELETE(
 //     const updateData = {
 //       name: formData.get("name") || existingProduct.name,
 //       description: formData.get("description") || existingProduct.description,
-//       price: formData.get("price")
-//         ? Number(formData.get("price"))
-//         : existingProduct.price,
 //       category: formData.get("category") || existingProduct.category,
 //       sizes: formData.get("sizes")
 //         ? JSON.parse(formData.get("sizes") as string)
@@ -196,3 +192,134 @@ export async function DELETE(
 //     }
 //   }
 // }
+
+export const PUT = async (
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) => {
+  const { id } = params
+
+  try {
+    // Validate product ID
+    if (!Types.ObjectId.isValid(id)) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Invalid product ID format",
+        }),
+        { status: 400 }
+      )
+    }
+
+    await connectDb()
+    const formData = await request.formData()
+
+    // Get the existing product
+    const existingProduct = await Product.findById(id)
+    if (!existingProduct) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Product not found",
+        }),
+        { status: 404 }
+      )
+    }
+
+    // Initialize update object with existing data
+    const updateData = {
+      name: formData.get("name") || existingProduct.name,
+      description: formData.get("description") || existingProduct.description,
+      category: formData.get("category") || existingProduct.category,
+      sizes: formData.get("sizes")
+        ? JSON.parse(formData.get("sizes") as string)
+        : existingProduct.sizes,
+      feature: formData.get("feature")
+        ? JSON.parse(formData.get("feature") as string)
+        : existingProduct.feature,
+    }
+
+    // Handle image deletions
+    const imagesToDelete = formData.get("imagesToDelete")
+    if (imagesToDelete) {
+      const imageIdsToDelete = JSON.parse(imagesToDelete as string)
+
+      // Remove each image from Cloudinary and the product's images array
+      for (const imageId of imageIdsToDelete) {
+        // const imageToRemove = existingProduct.images.find(
+        //   (img: any) => img._id.toString() === imageId
+        // );
+
+        // if (imageToRemove) {
+        // try {
+        //   await deleteFromCloudinary(imageToRemove.image); // Utility to delete from Cloudinary
+        // } catch (error) {
+        //   console.error("Error deleting image from Cloudinary:", error);
+        // }
+
+        // Remove from the product's images array
+        existingProduct.images = existingProduct.images.filter(
+          (img: any) => img._id.toString() !== imageId
+        )
+        // }
+      }
+    }
+
+    // Handle additional images addition
+    const formEntries = Array.from(formData.entries())
+    const additionalImagesEntries = formEntries.filter(
+      ([key]) => key === "additionalImages"
+    )
+
+    if (additionalImagesEntries.length > 0) {
+      const processedImages = []
+
+      for (const [_, imageFile] of additionalImagesEntries) {
+        if (imageFile instanceof File && imageFile.size > 0) {
+          try {
+            const imageUrl = await uploadToCloudinary(
+              imageFile,
+              "products/additional"
+            )
+            processedImages.push({
+              image: imageUrl,
+            })
+          } catch (error) {
+            console.error("Error uploading additional image:", error)
+            // Continue with other images even if one fails
+          }
+        }
+      }
+
+      if (processedImages.length > 0) {
+        existingProduct.images.push(...processedImages)
+      }
+    }
+
+    // Apply updates to the product
+    Object.assign(existingProduct, updateData)
+
+    // Save the updated product
+    const updatedProduct = await existingProduct.save()
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Product updated successfully",
+        product: updatedProduct,
+      }),
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error("Error updating product:", error)
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: "Error updating product",
+        error:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      }),
+      { status: 500 }
+    )
+  }
+}
