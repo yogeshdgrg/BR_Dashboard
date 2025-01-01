@@ -138,7 +138,7 @@ export default function EditProductForm({
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         toast.success("Product updated successfully");
         await onProductUpdated();
@@ -161,7 +161,9 @@ export default function EditProductForm({
       <div className="absolute right-0 top-0 h-full w-full md:w-2/3 lg:w-1/2 bg-white transform transition-transform duration-300 ease-in-out overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Edit Product</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Edit Product
+            </h2>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-6 w-6" />
             </Button>

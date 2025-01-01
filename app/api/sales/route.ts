@@ -1,14 +1,21 @@
 // app/api/sales/route.ts
-import { NextResponse } from "next/server"
-import { MonthlySalesData } from "@/types"
-import Order from "@/lib/models/order"
-import { connectDb } from "@/lib/db"
+import { NextResponse } from "next/server";
+import Order from "@/lib/models/order";
+import { connectDb } from "@/lib/db";
+
+interface MonthlySalesData {
+  month: number;
+  totalAmount: number;
+  orderCount: number;
+  productsSold: number;
+  categoryBreakdown: Record<string, { count: number; revenue: number }>;
+}
 
 export async function GET() {
   try {
-    await connectDb()
+    await connectDb();
 
-    const currentYear = new Date().getFullYear()
+    const currentYear = new Date().getFullYear();
 
     const monthlyData = await Order.aggregate([
       {
@@ -62,13 +69,13 @@ export async function GET() {
       {
         $sort: { _id: 1 },
       },
-    ])
+    ]);
 
     // Fill in missing months with zero values
     const filledData: MonthlySalesData[] = Array.from(
       { length: 12 },
       (_, i) => {
-        const existingData = monthlyData.find((item) => item._id === i + 1)
+        const existingData = monthlyData.find((item) => item._id === i + 1);
         return {
           month: i + 1,
           totalAmount: existingData?.totalAmount || 0,
@@ -76,7 +83,11 @@ export async function GET() {
           productsSold: existingData?.productsSold || 0,
           categoryBreakdown:
             existingData?.categoryBreakdown?.reduce(
-              (acc, curr) => ({
+              (
+                acc: Record<string, { count: number; revenue: number }>,
+                curr: { category: string; count: number; revenue: number }
+                // check this once might not work
+              ) => ({
                 ...acc,
                 [curr.category]: {
                   count: curr.count,
@@ -85,17 +96,17 @@ export async function GET() {
               }),
               {}
             ) || {},
-        }
+        };
       }
-    )
+    );
 
     return NextResponse.json({
       success: true,
       data: filledData,
       message: "Monthly sales data fetched successfully",
-    })
+    });
   } catch (error) {
-    console.error("Error in sales API:", error)
+    console.error("Error in sales API:", error);
     return NextResponse.json(
       {
         success: false,
@@ -104,6 +115,6 @@ export async function GET() {
           error instanceof Error ? error.message : "Unknown error occurred",
       },
       { status: 500 }
-    )
+    );
   }
 }

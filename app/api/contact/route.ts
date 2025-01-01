@@ -1,22 +1,22 @@
-import { connectDb } from "@/lib/db"
-import Contact from "@/lib/models/contact"
-import { NextRequest, NextResponse } from "next/server"
-import nodemailer from "nodemailer"
+import { connectDb } from "@/lib/db";
+import Contact from "@/lib/models/contact";
+import { NextRequest, NextResponse } from "next/server";
+import nodemailer from "nodemailer";
 
 export const POST = async (req: NextRequest) => {
   try {
-    await connectDb()
-    const body = await req.json()
+    await connectDb();
+    const body = await req.json();
 
     // Validate required fields
     if (!body.email || !body.name || !body.message) {
       return NextResponse.json(
         { success: false, message: "Missing required fields" },
         { status: 400 }
-      )
+      );
     }
 
-    const response = await Contact.create(body)
+    const response = await Contact.create(body);
     // console.log("Response : ", response)
 
     if (response) {
@@ -26,7 +26,7 @@ export const POST = async (req: NextRequest) => {
           user: process.env.EMAIL_USER, // Your email
           pass: process.env.EMAIL_PASS, // Your email password or app password
         },
-      })
+      });
 
       // Email to the product owner
       const ownerEmailOptions = {
@@ -34,12 +34,12 @@ export const POST = async (req: NextRequest) => {
         to: "yogeshgrg83@gmail.com",
         subject: `Contact Message from ${body.name}`,
         text: body.message,
-      }
+      };
 
       try {
-        await transporter.sendMail(ownerEmailOptions)
+        await transporter.sendMail(ownerEmailOptions);
       } catch (emailError) {
-        console.error("Failed to send email:", emailError)
+        console.error("Failed to send email:", emailError);
         return NextResponse.json(
           {
             success: false,
@@ -47,21 +47,20 @@ export const POST = async (req: NextRequest) => {
             contact: response,
           },
           { status: 500 }
-        )
+        );
       }
-
 
       return NextResponse.json({
         success: true,
         message: "Your message has sent successfully",
         contact: response,
-      })
+      });
     }
   } catch (error) {
     return NextResponse.json({
       success: false,
       message: "Your message has not been sent successfully",
-      err: error.message,
-    })
+      err: (error as Error).message,
+    });
   }
-}
+};
