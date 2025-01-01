@@ -245,22 +245,10 @@ export const PUT = async (
     if (imagesToDelete) {
       const imageIdsToDelete = JSON.parse(imagesToDelete as string)
 
-      // Remove each image from Cloudinary and the product's images array
       for (const imageId of imageIdsToDelete) {
-        // const imageToRemove = existingProduct.images.find(
-        //   (img: any) => img._id.toString() === imageId
-        // );
-
-        // if (imageToRemove) {
-        // try {
-        //   await deleteFromCloudinary(imageToRemove.image); // Utility to delete from Cloudinary
-        // } catch (error) {
-        //   console.error("Error deleting image from Cloudinary:", error);
-        // }
-
-        // Remove from the product's images array
+      
         existingProduct.images = existingProduct.images.filter(
-          (img: any) => img._id.toString() !== imageId
+          (img: {image:string, _id:number}) => img._id.toString() !== imageId
         )
         // }
       }
@@ -275,7 +263,8 @@ export const PUT = async (
     if (additionalImagesEntries.length > 0) {
       const processedImages = []
 
-      for (const [_, imageFile] of additionalImagesEntries) {
+      for (const [key, imageFile] of additionalImagesEntries) {
+        console.log(key)
         if (imageFile instanceof File && imageFile.size > 0) {
           try {
             const imageUrl = await uploadToCloudinary(

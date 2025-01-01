@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, FormEvent } from "react"
+import { useState,  FormEvent } from "react"
 import { X, Upload, Loader2, ImagePlus, Trash2 } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
@@ -181,8 +181,9 @@ export default function AddProductForm({
       } else {
         throw new Error(data.message || "Failed to add product")
       }
-    } catch (error: any) {
-      toast.error(error.message)
+    } catch (error) {
+      if(error instanceof Error)
+        toast.error(error.message)
     } finally {
       setIsSubmitting(false)
     }

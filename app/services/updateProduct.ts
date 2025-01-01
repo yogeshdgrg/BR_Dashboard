@@ -1,106 +1,4 @@
-// import { connectDb } from "@/lib/db"
-// import Product from "@/lib/models/product"
-// import { uploadToCloudinary } from "@/utils/cloudinary"
-// import { NextRequest } from "next/server"
-// import { Types } from "mongoose"
 
-// export const updateProduct = async (
-//   request: NextRequest,
-//   { params }: { params: { id: string } }
-// ) => {
-//   try {
-//     // Validate product ID
-//     if (!Types.ObjectId.isValid(params.id)) {
-//       return {
-//         success: false,
-//         message: "Invalid product ID format",
-//       }
-//     }
-
-//     await connectDb()
-//     const formData = await request.formData()
-
-//     // Get existing product
-//     const existingProduct = await Product.findById(params.id)
-//     if (!existingProduct) {
-//       return {
-//         success: false,
-//         message: "Product not found",
-//       }
-//     }
-
-//     // Initialize update object with existing data
-//     const updateData = {
-//       name: formData.get("name") || existingProduct.name,
-//       description: formData.get("description") || existingProduct.description,
-//       category: formData.get("category") || existingProduct.category,
-//       sizes: formData.get("sizes")
-//         ? JSON.parse(formData.get("sizes") as string)
-//         : existingProduct.sizes,
-//       feature: formData.get("feature")
-//         ? JSON.parse(formData.get("feature") as string)
-//         : existingProduct.feature,
-//     }
-
-//     // Handle main product image update
-//     const mainImage = formData.get("img") as File | null
-//     if (mainImage && mainImage.size > 0) {
-//       const mainImageUrl = await uploadToCloudinary(mainImage)
-//       updateData.img = mainImageUrl
-//     }
-
-//     // Handle color images update
-//     const newColorsData = formData.get("colors")
-//     if (newColorsData) {
-//       const colorImagesData = JSON.parse(newColorsData as string)
-//       const processedColors = []
-
-//       for (const color of colorImagesData) {
-//         const colorFile = formData.get(`color_${color.name}`) as File | null
-//         let colorImageUrl = color.image // Use existing image URL by default
-
-//         // Only upload new image if file is provided
-//         if (colorFile && colorFile.size > 0) {
-//           colorImageUrl = await uploadToCloudinary(colorFile, "product_colors")
-//         }
-
-//         processedColors.push({
-//           name: color.name,
-//           image: colorImageUrl,
-//         })
-//       }
-
-//       updateData.colors = processedColors
-//     }
-
-//     // Update product with new data
-//     const updatedProduct = await Product.findByIdAndUpdate(
-//       params.id,
-//       { $set: updateData },
-//       { new: true, runValidators: true }
-//     )
-
-//     if (!updatedProduct) {
-//       return {
-//         success: false,
-//         message: "Failed to update product",
-//       }
-//     }
-
-//     return {
-//       success: true,
-//       message: "Product updated successfully",
-//       product: updatedProduct,
-//     }
-//   } catch (error) {
-//     console.error("Error updating product:", error)
-//     return {
-//       success: false,
-//       message: "Error updating product",
-//       error: error instanceof Error ? error.message : "Unknown error occurred",
-//     }
-//   }
-// }
 
 import { connectDb } from "@/lib/db"
 import Product from "@/lib/models/product"
@@ -174,7 +72,9 @@ export const updateProduct = async (
     if (additionalImagesEntries.length > 0) {
       const processedImages = []
 
-      for (const [_, imageFile] of additionalImagesEntries) {
+      for (const [key, imageFile] of additionalImagesEntries) {
+        console.log(key)
+
         if (imageFile instanceof File && imageFile.size > 0) {
           try {
             const imageUrl = await uploadToCloudinary(
