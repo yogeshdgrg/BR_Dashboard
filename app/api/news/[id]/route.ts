@@ -4,11 +4,13 @@ import { INews } from "@/types/news"
 import { uploadToCloudinary } from "@/utils/cloudinary"
 import { NextRequest, NextResponse } from "next/server"
 
+type Params = { id: string }
+
 export const DELETE = async (
   req: NextRequest,
-  { params }: { params: { id: string } }
-) => {
-  const { id } = params
+  context: { params: { id: string } }
+): Promise<Response> => {
+  const { id } = context.params
   if (!id) {
     return NextResponse.json({
       success: false,
@@ -36,24 +38,79 @@ export const DELETE = async (
   }
 }
 
+// export async function PUT(
+//   request: NextRequest,
+//   // context: { params: { id: string } }
+//   { params }: { params: { id: string } }
+// ): Promise<NextResponse> {
+//   try {
+//     // const { id } = context.params;
+//     const { id } = params
+//     // Connect to database
+//     await connectDb()
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+//     // Get form data from request
+//     const formData = await request.formData()
+//     const title = formData.get("title") as string
+//     const description = formData.get("description") as string
+//     const author = formData.get("author") as string
+//     const imageFile = formData.get("image") as File | null
+
+//     // Find existing news entry
+//     const existingNews = await News.findById(id)
+//     if (!existingNews) {
+//       return NextResponse.json(
+//         { error: "News entry not found" },
+//         { status: 404 }
+//       )
+//     }
+
+//     // Prepare update object
+//     const updateData: Partial<INews> = {}
+//     if (title) updateData.title = title
+//     if (description) updateData.description = description
+//     if (author) updateData.author = author
+
+//     // Handle image update if new image is provided
+//     if (imageFile) {
+//       // Upload new image and update URL
+//       const imageUrl = await uploadToCloudinary(imageFile, "news")
+//       updateData.img = imageUrl
+//     }
+
+//     // Update news entry in database
+//     const updatedNews = await News.findByIdAndUpdate(id, updateData, {
+//       new: true,
+//     })
+
+//     return NextResponse.json({
+//       success: true,
+//       news: updatedNews,
+//     })
+//   } catch (error) {
+//     console.error("Error processing request:", error)
+//     return NextResponse.json(
+//       { error: "Error updating news entry" },
+//       { status: 500 }
+//     )
+//   }
+// }
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Params }
+): Promise<Response> {
   try {
-    // Connect to database
+    const { id } = params
     await connectDb()
 
-    // Get form data from request
-    const formData = await request.formData()
+    const formData = await req.formData()
     const title = formData.get("title") as string
     const description = formData.get("description") as string
     const author = formData.get("author") as string
     const imageFile = formData.get("image") as File | null
 
-    // Find existing news entry
-    const existingNews = await News.findById(params.id)
+    const existingNews = await News.findById(id)
     if (!existingNews) {
       return NextResponse.json(
         { error: "News entry not found" },
@@ -61,28 +118,21 @@ export async function PUT(
       )
     }
 
-    // Prepare update object
     const updateData: Partial<INews> = {}
     if (title) updateData.title = title
     if (description) updateData.description = description
     if (author) updateData.author = author
 
-    // Handle image update if new image is provided
     if (imageFile) {
-      // Upload new image and update URL
       const imageUrl = await uploadToCloudinary(imageFile, "news")
       updateData.img = imageUrl
     }
 
-    // Update news entry in database
-    const updatedNews = await News.findByIdAndUpdate(params.id, updateData, {
+    const updatedNews = await News.findByIdAndUpdate(id, updateData, {
       new: true,
     })
 
-    return NextResponse.json({
-      success: true,
-      news: updatedNews,
-    })
+    return NextResponse.json({ success: true, news: updatedNews })
   } catch (error) {
     console.error("Error processing request:", error)
     return NextResponse.json(

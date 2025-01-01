@@ -1,4 +1,4 @@
-import { v2 as cloudinary } from "cloudinary"
+import { v2 as cloudinary, UploadApiOptions, UploadApiResponse } from "cloudinary"
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -63,30 +63,49 @@ export const uploadToCloudinary = async (
     const base64File = buffer.toString("base64")
 
     // Create upload stream with configuration
-    const uploadConfig = {
+    const uploadConfig:UploadApiOptions = {
       folder: folder,
       resource_type: "auto",
     }
 
     // Use async/await with Cloudinary upload
-    const result = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload(
+    // const result = await new Promise((resolve, reject) => {
+    //   const uploadStream = cloudinary.uploader.upload(
+    //     `data:${file.type};base64,${base64File}`,
+    //     uploadConfig,
+    //     (error, result) => {
+    //       if (error) {
+    //         console.error("Cloudinary upload error:", error)
+    //         reject(error)
+    //       } else {
+    //         console.log("Cloudinary upload success:", result?.secure_url)
+    //         resolve(result)
+    //       }
+    //     }
+    //   )
+    // })
+
+    const result = await new Promise<UploadApiResponse>((resolve, reject) => {
+      cloudinary.uploader.upload(
         `data:${file.type};base64,${base64File}`,
         uploadConfig,
         (error, result) => {
           if (error) {
-            console.error("Cloudinary upload error:", error)
-            reject(error)
+            console.error("Cloudinary upload error:", error);
+            reject(error);
+          } else if (result) {  // Ensure result is not undefined
+            console.log("Cloudinary upload success:", result.secure_url);
+            resolve(result);
           } else {
-            console.log("Cloudinary upload success:", result?.secure_url)
-            resolve(result)
+            reject(new Error("Upload failed, result is undefined"));
           }
         }
-      )
-    })
+      );
+    });
+    
 
     // Return the secure URL from the result
-    return (result as any).secure_url
+    return result.secure_url
   } catch (error) {
     console.error("Error in uploadToCloudinary:", error)
     throw error

@@ -138,7 +138,7 @@ export default function NewsPage() {
 
     try {
       const response = await fetch(`/api/news/${selectedNews._id}`, {
-        method: "PUT",
+        method: "PATCH",
         body: formData,
       })
 

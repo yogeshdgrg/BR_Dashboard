@@ -1,10 +1,12 @@
-
-
 import { connectDb } from "@/lib/db"
 import Product from "@/lib/models/product"
 import { uploadToCloudinary } from "@/utils/cloudinary"
 import { NextRequest } from "next/server"
 import { Types } from "mongoose"
+
+interface Image {
+  image: string
+}
 
 export const updateProduct = async (
   request: NextRequest,
@@ -42,26 +44,27 @@ export const updateProduct = async (
       feature: formData.get("feature")
         ? JSON.parse(formData.get("feature") as string)
         : existingProduct.feature,
+        images: [] as Image[],
     }
 
     // Handle main product image update
-    const mainImage = formData.get("img") as File | null
-    if (mainImage && mainImage.size > 0) {
-      try {
-        const mainImageUrl = await uploadToCloudinary(
-          mainImage,
-          "products/main"
-        )
-        updateData.img = mainImageUrl
-      } catch (error) {
-        console.error("Error uploading main image:", error)
-        return {
-          success: false,
-          message: "Failed to upload main image",
-          error: error instanceof Error ? error.message : "Unknown error",
-        }
-      }
-    }
+    // const mainImage = formData.get("img") as File | null
+    // if (mainImage && mainImage.size > 0) {
+    //   try {
+    //     const mainImageUrl = await uploadToCloudinary(
+    //       mainImage,
+    //       "products/main"
+    //     )
+    //     updateData.img = mainImageUrl
+    //   } catch (error) {
+    //     console.error("Error uploading main image:", error)
+    //     return {
+    //       success: false,
+    //       message: "Failed to upload main image",
+    //       error: error instanceof Error ? error.message : "Unknown error",
+    //     }
+    //   }
+    // }
 
     // Handle additional images update
     const formEntries = Array.from(formData.entries())
@@ -70,7 +73,7 @@ export const updateProduct = async (
     )
 
     if (additionalImagesEntries.length > 0) {
-      const processedImages = []
+      const processedImages: Image[] = [] // Initialize as an array of Image type
 
       for (const [key, imageFile] of additionalImagesEntries) {
         console.log(key)
