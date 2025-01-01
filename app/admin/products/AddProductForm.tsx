@@ -1,67 +1,136 @@
 "use client"
 
-import { useState } from "react"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { useState, useCallback } from "react"
+import { X, Upload, Loader2, ImagePlus, Trash2 } from "lucide-react"
+import Image from "next/image"
 import { toast } from "sonner"
-import { X, ImagePlus, Trash2, Router } from "lucide-react"
 
-export default function AddProductForm({
-  isOpen,
-  onClose,
-  onSuccess,
-}: {
-  isOpen: boolean
-  onClose: () => void
-  onSuccess: () => void
-}) {
-  const [loading, setLoading] = useState(false)
-  const [uploadingImages, setUploadingImages] = useState(false)
+export default function AddProductForm({ isOpen, onClose, onProductAdded }) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     category: "",
     sizes: [],
     feature: [],
-    additionalImages: [] as File[], // This will hold the selected files
+    images: [],
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [previewImages, setPreviewImages] = useState([])
+  const [sizeInput, setSizeInput] = useState("")
+  const [featureInput, setFeatureInput] = useState("")
+  const [isDragging, setIsDragging] = useState(false)
 
-  const removeImage = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      additionalImages: prev.additionalImages.filter((_, i) => i !== index), // Remove the image at the specific index
-    }))
+  const handleDragEnter = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
   }
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
+  const handleDragLeave = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    const files = Array.from(e.dataTransfer.files).filter((file) =>
+      file.type.startsWith("image/")
+    )
+
+    if (files.length === 0) {
+      toast.error("Please drop only image files")
+      return
+    }
+
+    // Process the dropped files
+    const newPreviewImages = files.map((file) => ({
+      url: URL.createObjectURL(file),
+      file,
+    }))
+
+    setPreviewImages((prev) => [...prev, ...newPreviewImages])
+  }
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files)
+
+    const newPreviewImages = files.map((file) => ({
+      url: URL.createObjectURL(file),
+      file,
+      name: file.name,
+      size: (file.size / 1024 / 1024).toFixed(2), // Convert to MB
+    }))
+
+    setPreviewImages((prev) => [...prev, ...newPreviewImages])
+  }
+
+  const removeImage = (index) => {
+    URL.revokeObjectURL(previewImages[index].url) // Clean up URL object
+    setPreviewImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleAddSize = () => {
+    if (sizeInput.trim()) {
       setFormData((prev) => ({
         ...prev,
-        additionalImages: [...prev.additionalImages, ...Array.from(e.target.files)], // Add the selected files to the state
+        sizes: [...prev.sizes, sizeInput.trim()],
       }))
+      setSizeInput("")
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleAddFeature = () => {
+    if (featureInput.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        feature: [...prev.feature, featureInput.trim()],
+      }))
+      setFeatureInput("")
+    }
+  }
+
+  const removeSize = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      sizes: prev.sizes.filter((_, i) => i !== index),
+    }))
+  }
+
+  const removeFeature = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      feature: prev.feature.filter((_, i) => i !== index),
+    }))
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
-
-    const formDataToSend = new FormData()
-    formDataToSend.append("name", formData.name)
-    formDataToSend.append("description", formData.description)
-    formDataToSend.append("category", formData.category)
-    formDataToSend.append("sizes", JSON.stringify(formData.sizes))
-    formDataToSend.append("feature", JSON.stringify(formData.feature))
-
-    // Append all additional images to the formData
-    formData.additionalImages.forEach((file) => {
-      formDataToSend.append("additionalImages", file)
-    })
+    setIsSubmitting(true)
 
     try {
+      const formDataToSend = new FormData()
+
+      // Add basic fields
+      formDataToSend.append("name", formData.name)
+      formDataToSend.append("description", formData.description)
+      formDataToSend.append("category", formData.category)
+      formDataToSend.append("sizes", JSON.stringify(formData.sizes))
+      formDataToSend.append("feature", JSON.stringify(formData.feature))
+
+      // Add images
+      previewImages.forEach(({ file }) => {
+        formDataToSend.append("additionalImages", file)
+      })
+
       const response = await fetch("/api/product", {
         method: "POST",
         body: formDataToSend,
@@ -71,168 +140,284 @@ export default function AddProductForm({
 
       if (data.success) {
         toast.success("Product added successfully")
+        onProductAdded()
+        onClose()
+
+        // Reset form
         setFormData({
           name: "",
           description: "",
           category: "",
           sizes: [],
           feature: [],
-          additionalImages: [],
+          images: [],
         })
-
-        onSuccess()
+        setPreviewImages([])
       } else {
-        toast.error(data.message || "Failed to add product")
+        throw new Error(data.message || "Failed to add product")
       }
     } catch (error) {
-      // toast.error("Error adding product")
+      toast.error(error.message)
     } finally {
-      setLoading(false)
+      setIsSubmitting(false)
     }
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
-        <div className="flex justify-between items-center mb-4">
+    <div
+      className={`fixed inset-y-0 right-0 w-full sm:w-96 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+        isOpen ? "translate-x-0" : "translate-x-full"
+      } z-50`}
+    >
+      <div className="h-full flex flex-col">
+        <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-lg font-semibold">Add New Product</h2>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-gray-100 rounded-full"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4">
+          <div className="space-y-4">
+            {/* Basic Information */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Name
+              </label>
+              <input
+                type="text"
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
-                required
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Input
-                id="category"
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Description
+              </label>
+              <textarea
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                rows={3}
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Category
+              </label>
+              <input
+                type="text"
+                required
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
                 value={formData.category}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, category: e.target.value }))
                 }
-                required
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, description: e.target.value }))
-              }
-              required
-              rows={4}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Sizes (comma-separated)</Label>
-              <Input
-                value={formData.sizes.join(", ")}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    sizes: e.target.value
-                      .split(",")
-                      .map((s) => s.trim())
-                      .filter(Boolean),
-                  }))
-                }
-                placeholder="S, M, L, XL"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Features (comma-separated)</Label>
-              <Input
-                value={formData.feature.join(", ")}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    feature: e.target.value
-                      .split(",")
-                      .map((f) => f.trim())
-                      .filter(Boolean),
-                  }))
-                }
-                placeholder="Feature 1, Feature 2, Feature 3"
-              />
+            {/* Sizes */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Sizes
+              </label>
+              <div className="flex gap-2 mt-1">
+                <input
+                  type="text"
+                  className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                  value={sizeInput}
+                  onChange={(e) => setSizeInput(e.target.value)}
+                  placeholder="Enter size"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddSize}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.sizes.map((size, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-md"
+                  >
+                    {size}
+                    <button
+                      type="button"
+                      onClick={() => removeSize(index)}
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label>Product Images</Label>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <div className="flex items-center justify-center w-full">
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <ImagePlus className="w-8 h-8 mb-2 text-gray-500" />
-                      <p className="text-sm text-gray-500">Click to upload images</p>
+            {/* Features */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Features
+              </label>
+              <div className="flex gap-2 mt-1">
+                <input
+                  type="text"
+                  className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                  value={featureInput}
+                  onChange={(e) => setFeatureInput(e.target.value)}
+                  placeholder="Enter feature"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddFeature}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.feature.map((feature, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-md"
+                  >
+                    {feature}
+                    <button
+                      type="button"
+                      onClick={() => removeFeature(index)}
+                      className="text-green-600 hover:text-green-800"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Image Upload */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Product Images
+                </label>
+                <div
+                  className={`relative border-2 border-dashed rounded-lg p-4 transition-colors ${
+                    isDragging
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-300 hover:border-gray-400"
+                  }`}
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                >
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    className="hidden"
+                    id="image-upload"
+                    onChange={handleImageChange}
+                  />
+                  <label
+                    htmlFor="image-upload"
+                    className="flex flex-col items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <div className="p-4 rounded-full bg-blue-50">
+                      <ImagePlus className="w-8 h-8 text-blue-500" />
                     </div>
-                    <Input
-                      type="file"
-                      className="hidden"
-                      multiple
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      disabled={uploadingImages}
-                    />
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-blue-600">
+                        Click to upload or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        SVG, PNG, JPG or GIF (max. 800x400px)
+                      </p>
+                    </div>
                   </label>
                 </div>
-              </div>
 
-              {/* Displaying selected images */}
-              {formData.additionalImages.length > 0 && (
-                <div className="flex gap-4 mt-4">
-                  {formData.additionalImages.map((file, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={URL.createObjectURL(file)} // Generate an object URL to preview the file
-                        alt={`Product ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-2 right-2 p-1 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <Trash2 className="w-4 h-4 text-white" />
-                      </button>
+                {/* Image Preview Grid */}
+                {previewImages.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      Selected Images ({previewImages.length})
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      {previewImages.map((image, index) => (
+                        <div
+                          key={index}
+                          className="relative group bg-gray-50 rounded-lg p-2"
+                        >
+                          <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-100">
+                            <Image
+                              src={image.url}
+                              alt={`Preview ${index + 1}`}
+                              width={200}
+                              height={200}
+                              className="object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center">
+                              <button
+                                type="button"
+                                onClick={() => removeImage(index)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-red-500 hover:bg-red-600 text-white rounded-full"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="mt-2 text-xs text-gray-500">
+                            <p className="truncate">{image.name}</p>
+                            <p>{image.size} MB</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading || uploadingImages}>
-              {loading ? "Adding..." : "Add Product"}
-            </Button>
+          {/* Submit Button */}
+          <div className="mt-6">
+            <button
+              type="submit"
+              disabled={isSubmitting || previewImages.length === 0}
+              className="w-full bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center gap-2 shadow-lg"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Adding Product...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-5 w-5" />
+                  Add Product
+                </>
+              )}
+            </button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   )
 }

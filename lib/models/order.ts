@@ -7,7 +7,10 @@ export interface IOrder extends Document {
   email: string
   phone: string
   product: Types.ObjectId | IProduct
-  color: string
+  company:string
+  size:string
+  companyAddress:string
+  businessType?:string
   quantity: number
   message: string
   status: string
@@ -36,9 +39,21 @@ const orderSchema = new Schema<IOrder>({
     ref: "Product",
     required: true,
   },
-  color: {
+  company: {
     type: String,
     required: true,
+  },
+  size: {
+    type: String,
+    required: true,
+  },
+  companyAddress: {
+    type: String,
+    required: true,
+  },
+  businessType: {
+    type: String,
+    required: false,
   },
   quantity: {
     type: Number,
@@ -53,7 +68,6 @@ const orderSchema = new Schema<IOrder>({
     default: "pending",
   },
   createdAt: {
-    // Add this field
     type: Date,
     default: Date.now,
   },

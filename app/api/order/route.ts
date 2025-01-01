@@ -6,17 +6,30 @@ export const POST = async (req: NextRequest) => {
   try {
     await connectDb()
 
-    const { message, name, email, phone, product, color, quantity } =
-      await req.json()
+    const {
+      message,
+      name,
+      email,
+      phone,
+      product,
+      quantity,
+      businessType,
+      size,
+      company,
+      companyAddress,
+    } = await req.json()
 
     const response = await Order.create({
       name,
       email,
       phone,
-      color,
       product,
+      businessType,
       quantity,
       message,
+      size,
+      company,
+      companyAddress,
     })
 
     if (response) {
@@ -40,8 +53,11 @@ export const GET = async () => {
     // Ensure database connection
     await connectDb()
 
+    console.log("Hello")
     // Fetch all orders and populate the product field
     const orders = await Order.find({}).populate("product") //if product id is not there after populating the value of product will be null
+
+    console.log("Orders: ",orders)
 
     // Filter orders where the product does not exist
     const invalidOrders = orders.filter((order) => !order.product)

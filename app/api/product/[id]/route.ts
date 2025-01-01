@@ -48,8 +48,9 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id } = params
     // Validate product ID
-    if (!Types.ObjectId.isValid(params.id)) {
+    if (!Types.ObjectId.isValid(id)) {
       return Response.json(
         {
           success: false,
@@ -62,19 +63,19 @@ export async function DELETE(
     await connectDb()
 
     // Find the product first to ensure it exists
-    const product = await Product.findById(params.id)
-    if (!product) {
-      return Response.json(
-        {
-          success: false,
-          message: "Product not found",
-        },
-        { status: 404 }
-      )
-    }
+    // const product = await Product.findById(id)
+    // if (!product) {
+    //   return Response.json(
+    //     {
+    //       success: false,
+    //       message: "Product not found",
+    //     },
+    //     { status: 404 }
+    //   )
+    // }
 
     // Delete the product
-    await Product.findByIdAndDelete(params.id)
+    await Product.findByIdAndDelete(id)
 
     return Response.json({
       success: true,

@@ -1,27 +1,26 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import EditProductSidebar from "./EditProductSidebar"
 import Image from "next/image"
 import { Skeleton } from "@/components/ui/skeleton"
 import AddProductForm from "./AddProductForm"
 import { toast } from "sonner"
 import DeleteConfirmationModal from "../components/DeleteConfirmationModal"
+import EditProductForm from "./EditProductSidebar"
 
 export default function ProductList() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [selectedProduct, setSelectedProduct] = useState(null)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isAddFormOpen, setIsAddFormOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [productToDelete, setProductToDelete] = useState(null)
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState(null)
 
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/product")
+      const response = await fetch("/api/product")
       const data = await response.json()
-      console.log(data)
       setProducts(data.response)
     } catch (error) {
       console.error("Error fetching products:", error)
@@ -38,6 +37,11 @@ export default function ProductList() {
   const handleDeleteClick = (product) => {
     setProductToDelete(product)
     setIsDeleteModalOpen(true)
+  }
+
+  const handleEdit = (product) => {
+    setSelectedProduct(product)
+    setIsEditFormOpen(true)
   }
 
   const handleDelete = async () => {
@@ -62,20 +66,6 @@ export default function ProductList() {
       setIsDeleteModalOpen(false)
       setProductToDelete(null)
     }
-  }
-
-  const handleProductUpdate = async () => {
-    await fetchProducts()
-  }
-
-  const handleEdit = (product) => {
-    setSelectedProduct(product)
-    setIsSidebarOpen(true)
-  }
-
-  const handleCloseSidebar = () => {
-    setIsSidebarOpen(false)
-    setTimeout(() => setSelectedProduct(null), 300)
   }
 
   if (loading) {
@@ -180,10 +170,14 @@ export default function ProductList() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{product.category}</div>
+                    <div className="text-sm text-gray-500">
+                      {product.category}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{product.description}</div>
+                    <div className="text-sm text-gray-500">
+                      {product.description}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex flex-col gap-3">
                     <button
@@ -205,6 +199,12 @@ export default function ProductList() {
         </table>
       </div>
 
+      <AddProductForm
+        isOpen={isAddFormOpen}
+        onClose={() => setIsAddFormOpen(false)}
+        onProductAdded={fetchProducts}
+      />
+
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
         isOpen={isDeleteModalOpen}
@@ -213,18 +213,17 @@ export default function ProductList() {
         productName={productToDelete?.name || ""}
       />
 
-      <EditProductSidebar
-        isOpen={isSidebarOpen}
-        onClose={handleCloseSidebar}
-        product={selectedProduct}
-        onUpdate={handleProductUpdate}
-      />
-
-      <AddProductForm
-        isOpen={isAddFormOpen}
-        onClose={() => setIsAddFormOpen(false)}
-        fetchProducts={fetchProducts}
-      />
+      {selectedProduct && (
+        <EditProductForm
+          isOpen={isEditFormOpen}
+          onClose={() => {
+            setIsEditFormOpen(false)
+            setSelectedProduct(null)
+          }}
+          onProductUpdated={fetchProducts}
+          product={selectedProduct}
+        />
+      )}
     </div>
   )
 }
