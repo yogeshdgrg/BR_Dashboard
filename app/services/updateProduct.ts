@@ -43,11 +43,12 @@ export const updateProduct = async (
       feature: formData.get("feature")
         ? JSON.parse(formData.get("feature") as string)
         : existingProduct.feature,
-      isFeatured: formData.get("isFeatured")
+      isFeatured: formData.get("isFeatured") 
         ? formData.get("isFeatured") === "true"
         : existingProduct.isFeatured,
       images: [] as Image[],
     }
+
 
     const formEntries = Array.from(formData.entries())
     const additionalImagesEntries = formEntries.filter(
