@@ -12,9 +12,10 @@ const nextConfig = {
           {
             key: "Access-Control-Allow-Origin",
             // value: "http://192.168.1.66:5173",
-            value:'http://localhost:5173'
+            // value:'http://localhost:5173'
+            value: "https://br-charlie.vercel.app",
           },
-         
+
           {
             key: "Access-Control-Allow-Methods",
             value: "GET, DELETE, PATCH, POST, PUT",
@@ -26,8 +27,8 @@ const nextConfig = {
           },
         ],
       },
-    ];
+    ]
   },
-};
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig
