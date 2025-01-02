@@ -6,25 +6,25 @@ import Image from "next/image"
 import { toast } from "sonner"
 
 interface AddProductFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onProductAdded: () => void;
+  isOpen: boolean
+  onClose: () => void
+  onProductAdded: () => void
 }
 
 interface FormData {
-  name: string;
-  description: string;
-  category: string;
-  sizes: string[];
-  feature: string[];
-  images: File[];
+  name: string
+  description: string
+  category: string
+  sizes: string[]
+  feature: string[]
+  images: File[]
 }
 
 interface PreviewImage {
-  url: string;
-  file: File;
-  name?: string;
-  size?: string;
+  url: string
+  file: File
+  name?: string
+  size?: string
 }
 
 export default function AddProductForm({
@@ -184,13 +184,13 @@ export default function AddProductForm({
     } catch (error) {
       if (error instanceof Error) {
         // This ensures error.message is accessed only if it's an instance of Error
-        toast.error(error.message);
+        toast.error(error.message)
       } else {
         // Handle cases where the error might not be an instance of Error (for example, if it's a string or a custom object)
-        toast.error('An unexpected error occurred');
+        toast.error("An unexpected error occurred")
       }
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
   }
 
@@ -204,6 +204,7 @@ export default function AddProductForm({
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-lg font-semibold">Add New Product</h2>
           <button
+            title="Close add product"
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded-full"
           >
@@ -214,7 +215,10 @@ export default function AddProductForm({
           <div className="space-y-4">
             {/* Basic Information */}
             <div>
-              <label htmlFor="Name" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="Name"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Name
               </label>
               <input
@@ -225,7 +229,6 @@ export default function AddProductForm({
                 value={formData.name}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
-              
                 }
               />
             </div>
@@ -294,6 +297,7 @@ export default function AddProductForm({
                   >
                     {size}
                     <button
+                      title="Remove size"
                       type="button"
                       onClick={() => removeSize(index)}
                       className="text-blue-600 hover:text-blue-800"
@@ -334,6 +338,7 @@ export default function AddProductForm({
                   >
                     {feature}
                     <button
+                      title="Remove feature"
                       type="button"
                       onClick={() => removeFeature(index)}
                       className="text-green-600 hover:text-green-800"
@@ -410,6 +415,7 @@ export default function AddProductForm({
                             />
                             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center">
                               <button
+                                title="Remove Image"
                                 type="button"
                                 onClick={() => removeImage(index)}
                                 className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 bg-red-500 hover:bg-red-600 text-white rounded-full"

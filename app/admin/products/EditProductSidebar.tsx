@@ -1,33 +1,33 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { X, Loader2, Plus, Trash } from "lucide-react";
-import Image from "next/image";
-import { toast } from "sonner";
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { X, Loader2, Plus, Trash } from "lucide-react"
+import Image from "next/image"
+import { toast } from "sonner"
 
 interface ProductImage {
-  _id: string;
-  image: string;
+  _id: string
+  image: string
 }
 
 interface Product {
-  _id: string;
-  name: string;
-  description: string;
-  category: string;
-  sizes: string[];
-  feature: string[];
-  images: ProductImage[];
+  _id: string
+  name: string
+  description: string
+  category: string
+  sizes: string[]
+  feature: string[]
+  images: ProductImage[]
 }
 
 interface EditProductFormProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onProductUpdated: () => Promise<void>;
-  product: Product;
+  isOpen: boolean
+  onClose: () => void
+  onProductUpdated: () => Promise<void>
+  product: Product
 }
 
 export default function EditProductForm({
@@ -36,132 +36,134 @@ export default function EditProductForm({
   onProductUpdated,
   product: initialProduct,
 }: EditProductFormProps) {
-  const [loading, setLoading] = useState(false);
-  const [product, setProduct] = useState<Product>(initialProduct);
-  const [newSize, setNewSize] = useState("");
-  const [newFeature, setNewFeature] = useState("");
-  const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
-  const [additionalImages, setAdditionalImages] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false)
+  const [product, setProduct] = useState<Product>(initialProduct)
+  const [newSize, setNewSize] = useState("")
+  const [newFeature, setNewFeature] = useState("")
+  const [imagesToDelete, setImagesToDelete] = useState<string[]>([])
+  const [additionalImages, setAdditionalImages] = useState<File[]>([])
   const [formData, setFormData] = useState({
     name: initialProduct.name,
     description: initialProduct.description,
     category: initialProduct.category,
-  });
+  })
 
   useEffect(() => {
     if (isOpen) {
-      setProduct(initialProduct);
+      setProduct(initialProduct)
       setFormData({
         name: initialProduct.name,
         description: initialProduct.description,
         category: initialProduct.category,
-      });
-      setImagesToDelete([]);
-      setAdditionalImages([]);
+      })
+      setImagesToDelete([])
+      setAdditionalImages([])
     }
-  }, [isOpen, initialProduct]);
+  }, [isOpen, initialProduct])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setAdditionalImages((prev) => [...prev, ...files]);
-  };
+    const files = Array.from(e.target.files || [])
+    setAdditionalImages((prev) => [...prev, ...files])
+  }
 
   const handleDeleteImage = (imageId: string) => {
-    setImagesToDelete((prev) => [...prev, imageId]);
-  };
+    setImagesToDelete((prev) => [...prev, imageId])
+  }
 
   const handleRemoveNewImage = (index: number) => {
-    setAdditionalImages((prev) => prev.filter((_, i) => i !== index));
-  };
+    setAdditionalImages((prev) => prev.filter((_, i) => i !== index))
+  }
 
   const handleAddSize = () => {
     if (newSize && product) {
       setProduct({
         ...product,
         sizes: [...product.sizes, newSize],
-      });
-      setNewSize("");
+      })
+      setNewSize("")
     }
-  };
+  }
 
   const handleRemoveSize = (index: number) => {
     if (product) {
       setProduct({
         ...product,
         sizes: product.sizes.filter((_, i) => i !== index),
-      });
+      })
     }
-  };
+  }
 
   const handleAddFeature = () => {
     if (newFeature && product) {
       setProduct({
         ...product,
         feature: [...product.feature, newFeature],
-      });
-      setNewFeature("");
+      })
+      setNewFeature("")
     }
-  };
+  }
 
   const handleRemoveFeature = (index: number) => {
     if (product) {
       setProduct({
         ...product,
         feature: product.feature.filter((_, i) => i !== index),
-      });
+      })
     }
-  };
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault()
+    setLoading(true)
 
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("name", formData.name);
-      formDataToSend.append("description", formData.description);
-      formDataToSend.append("category", formData.category);
-      formDataToSend.append("sizes", JSON.stringify(product?.sizes || []));
-      formDataToSend.append("feature", JSON.stringify(product?.feature || []));
+      const formDataToSend = new FormData()
+      formDataToSend.append("name", formData.name)
+      formDataToSend.append("description", formData.description)
+      formDataToSend.append("category", formData.category)
+      formDataToSend.append("sizes", JSON.stringify(product?.sizes || []))
+      formDataToSend.append("feature", JSON.stringify(product?.feature || []))
 
       if (imagesToDelete.length > 0) {
-        formDataToSend.append("imagesToDelete", JSON.stringify(imagesToDelete));
+        formDataToSend.append("imagesToDelete", JSON.stringify(imagesToDelete))
       }
 
       additionalImages.forEach((image) => {
-        formDataToSend.append("additionalImages", image);
-      });
+        formDataToSend.append("additionalImages", image)
+      })
 
       const response = await fetch(`/api/product/${product._id}`, {
         method: "PUT",
         body: formDataToSend,
-      });
+      })
 
-      const data = await response.json();
-      
+      const data = await response.json()
+
       if (data.success) {
-        toast.success("Product updated successfully");
-        await onProductUpdated();
-        onClose();
+        toast.success("Product updated successfully")
+        await onProductUpdated()
+        onClose()
       } else {
-        toast.error(data.message || "Failed to update product");
+        toast.error(data.message || "Failed to update product")
       }
     } catch (error) {
-      console.error("Error updating product:", error);
-      toast.error("Error updating product");
+      console.error("Error updating product:", error)
+      toast.error("Error updating product")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-hidden">
       <div className="absolute right-0 top-0 h-full w-full md:w-2/3 lg:w-1/2 bg-white transform transition-transform duration-300 ease-in-out overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">Edit Product</h2>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Edit Product
+            </h2>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-6 w-6" />
             </Button>
@@ -238,6 +240,7 @@ export default function EditProductForm({
                     <span>{size}</span>
                     <button
                       type="button"
+                      aria-label="Remove size"
                       onClick={() => handleRemoveSize(index)}
                       className="ml-2 text-red-600 hover:text-red-900"
                     >
@@ -275,6 +278,7 @@ export default function EditProductForm({
                   >
                     <span>{feature}</span>
                     <button
+                      aria-label="Remove feature"
                       type="button"
                       onClick={() => handleRemoveFeature(index)}
                       className="text-red-600 hover:text-red-900"
@@ -303,6 +307,7 @@ export default function EditProductForm({
                         className="rounded-lg object-cover w-full h-40"
                       />
                       <button
+                        aria-label="Delete Image"
                         type="button"
                         onClick={() => handleDeleteImage(img._id)}
                         className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
@@ -322,6 +327,7 @@ export default function EditProductForm({
                       className="rounded-lg object-cover w-full h-40"
                     />
                     <button
+                      aria-label="Remove new image"
                       type="button"
                       onClick={() => handleRemoveNewImage(index)}
                       className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
@@ -365,5 +371,5 @@ export default function EditProductForm({
         </div>
       </div>
     </div>
-  );
+  )
 }

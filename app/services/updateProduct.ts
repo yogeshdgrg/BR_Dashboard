@@ -13,7 +13,6 @@ export const updateProduct = async (
   { params }: { params: { id: string } }
 ) => {
   try {
-    // Validate product ID
     if (!Types.ObjectId.isValid(params.id)) {
       return {
         success: false,
@@ -24,7 +23,6 @@ export const updateProduct = async (
     await connectDb()
     const formData = await request.formData()
 
-    // Get existing product
     const existingProduct = await Product.findById(params.id)
     if (!existingProduct) {
       return {
@@ -33,18 +31,19 @@ export const updateProduct = async (
       }
     }
 
-    // Initialize update object with existing data
     const updateData = {
-      name: formData.get("name") || existingProduct.name,
-      description: formData.get("description") || existingProduct.description,
-      category: formData.get("category") || existingProduct.category,
+      name: (formData.get("name") as string) || existingProduct.name,
+      description:
+        (formData.get("description") as string) || existingProduct.description,
+      category:
+        (formData.get("category") as string) || existingProduct.category,
       sizes: formData.get("sizes")
         ? JSON.parse(formData.get("sizes") as string)
         : existingProduct.sizes,
       feature: formData.get("feature")
         ? JSON.parse(formData.get("feature") as string)
         : existingProduct.feature,
-        images: [] as Image[],
+      images: [] as Image[],
     }
 
     // Handle main product image update
@@ -66,7 +65,6 @@ export const updateProduct = async (
     //   }
     // }
 
-    // Handle additional images update
     const formEntries = Array.from(formData.entries())
     const additionalImagesEntries = formEntries.filter(
       ([key]) => key === "additionalImages"
@@ -77,7 +75,6 @@ export const updateProduct = async (
 
       for (const [key, imageFile] of additionalImagesEntries) {
         console.log(key)
-
         if (imageFile instanceof File && imageFile.size > 0) {
           try {
             const imageUrl = await uploadToCloudinary(
@@ -89,17 +86,14 @@ export const updateProduct = async (
             })
           } catch (error) {
             console.error("Error uploading additional image:", error)
-            // Continue with other images even if one fails
           }
         }
       }
-
       if (processedImages.length > 0) {
         updateData.images = processedImages
       }
     }
 
-    // Update product with new data
     const updatedProduct = await Product.findByIdAndUpdate(
       params.id,
       { $set: updateData },

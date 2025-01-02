@@ -1,3 +1,4 @@
+import React from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -7,9 +8,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 
-const DeleteConfirmationModal = ({
+interface DeleteConfirmationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  productName: string;
+}
+
+const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
   isOpen,
   onClose,
   onConfirm,
@@ -37,7 +45,7 @@ const DeleteConfirmationModal = ({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
-}
+  );
+};
 
-export default DeleteConfirmationModal
+export default DeleteConfirmationModal;

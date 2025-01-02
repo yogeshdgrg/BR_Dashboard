@@ -4,7 +4,9 @@
 //   // Replace this with actual database/auth API call
 //  try{
 //     await connectDb()
-//     const user = await 
+//     const user = await
 //  }
+//  catch{
 //   return null
+//  }
 // }

@@ -1,75 +1,88 @@
-"use client"
+"use client";
 
-import { useEffect, useState, useCallback } from "react"
-import Image from "next/image"
-import { Skeleton } from "@/components/ui/skeleton"
-import AddProductForm from "./AddProductForm"
-import { toast } from "sonner"
-import DeleteConfirmationModal from "../components/DeleteConfirmationModal"
-import EditProductForm from "./EditProductSidebar"
+import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
+import { Skeleton } from "@/components/ui/skeleton";
+import AddProductForm from "./AddProductForm";
+import { toast } from "sonner";
+import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
+import EditProductForm from "./EditProductSidebar";
 
+interface ProductImage {
+  _id: string;
+  image: string;
+}
+interface Product {
+  _id: string;
+  name: string;
+  description: string;
+  category: string;
+  sizes: string[];
+  feature: string[];
+  images: ProductImage[];
+}
 export default function ProductList() {
-  const [products, setProducts] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [isAddFormOpen, setIsAddFormOpen] = useState(false)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [productToDelete, setProductToDelete] = useState(null)
-  const [isEditFormOpen, setIsEditFormOpen] = useState(false)
-  const [selectedProduct, setSelectedProduct] = useState(null)
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isAddFormOpen, setIsAddFormOpen] = useState<boolean>(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [isEditFormOpen, setIsEditFormOpen] = useState<boolean>(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const fetchProducts = useCallback(async () => {
     try {
-      const response = await fetch("/api/product")
-      const data = await response.json()
-      setProducts(data.response)
+      const response = await fetch("/api/product");
+      const data = await response.json();
+      setProducts(data.response);
     } catch (error) {
-      console.error("Error fetching products:", error)
-      toast.error("Failed to fetch products")
+      console.error("Error fetching products:", error);
+      toast.error("Failed to fetch products");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    fetchProducts()
-  }, [fetchProducts])
+    fetchProducts();
+  }, [fetchProducts]);
 
-  const handleDeleteClick = (product) => {
-    setProductToDelete(product)
-    setIsDeleteModalOpen(true)
-  }
+  const handleDeleteClick = (product: Product) => {
+    setProductToDelete(product);
+    setIsDeleteModalOpen(true);
+  };
 
-  const handleEdit = (product) => {
-    setSelectedProduct(product)
-    setIsEditFormOpen(true)
-  }
+  const handleEdit = (product: Product) => {
+    setSelectedProduct(product);
+    setIsEditFormOpen(true);
+  };
 
   const handleDelete = async () => {
-    if (!productToDelete) return
+    if (!productToDelete) return;
 
     try {
       const response = await fetch(`/api/product/${productToDelete._id}`, {
         method: "DELETE",
-      })
-      const data = await response.json()
+      });
+      const data = await response.json();
 
       if (data.success) {
-        await fetchProducts()
-        toast.success("Product deleted successfully")
+        await fetchProducts();
+        toast.success("Product deleted successfully");
       } else {
-        toast.error(data.message || "Failed to delete product")
+        toast.error(data.message || "Failed to delete product");
       }
     } catch (error) {
-      console.error("Error deleting product:", error)
-      toast.error("Error deleting product")
+      console.error("Error deleting product:", error);
+      toast.error("Error deleting product");
     } finally {
-      setIsDeleteModalOpen(false)
-      setProductToDelete(null)
+      setIsDeleteModalOpen(false);
+      setProductToDelete(null);
     }
-  }
+  };
 
   if (loading) {
-    return <LoadingSkeleton />
+    return <LoadingSkeleton />;
   }
 
   return (
@@ -217,15 +230,15 @@ export default function ProductList() {
         <EditProductForm
           isOpen={isEditFormOpen}
           onClose={() => {
-            setIsEditFormOpen(false)
-            setSelectedProduct(null)
+            setIsEditFormOpen(false);
+            setSelectedProduct(null);
           }}
           onProductUpdated={fetchProducts}
           product={selectedProduct}
         />
       )}
     </div>
-  )
+  );
 }
 
 const LoadingSkeleton = () => (
@@ -247,4 +260,4 @@ const LoadingSkeleton = () => (
       </div>
     </div>
   </div>
-)
+);

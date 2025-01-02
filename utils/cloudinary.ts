@@ -4,7 +4,7 @@ cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
-})
+});
 
 // Utility function to upload image to Cloudinary
 // export async function uploadToCloudinary(
@@ -56,17 +56,17 @@ export const uploadToCloudinary = async (
       fileName: file.name,
       fileSize: file.size,
       fileType: file.type,
-    })
+    });
 
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-    const base64File = buffer.toString("base64")
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const base64File = buffer.toString("base64");
 
     // Create upload stream with configuration
     const uploadConfig:UploadApiOptions = {
       folder: folder,
       resource_type: "auto",
-    }
+    };
 
     // Use async/await with Cloudinary upload
     // const result = await new Promise((resolve, reject) => {
@@ -107,7 +107,7 @@ export const uploadToCloudinary = async (
     // Return the secure URL from the result
     return result.secure_url
   } catch (error) {
-    console.error("Error in uploadToCloudinary:", error)
-    throw error
+    console.error("Error in uploadToCloudinary:", error);
+    throw error;
   }
-}
+};
