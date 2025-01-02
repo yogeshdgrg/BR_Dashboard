@@ -45,6 +45,10 @@ const productSchema: Schema = new Schema(
     feature: {
       type: [String],
     },
+    isFeatured: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true } // Enable timestamps
 )

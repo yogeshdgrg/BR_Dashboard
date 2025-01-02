@@ -43,27 +43,11 @@ export const updateProduct = async (
       feature: formData.get("feature")
         ? JSON.parse(formData.get("feature") as string)
         : existingProduct.feature,
+      isFeatured: formData.get("isFeatured")
+        ? formData.get("isFeatured") === "true"
+        : existingProduct.isFeatured,
       images: [] as Image[],
     }
-
-    // Handle main product image update
-    // const mainImage = formData.get("img") as File | null
-    // if (mainImage && mainImage.size > 0) {
-    //   try {
-    //     const mainImageUrl = await uploadToCloudinary(
-    //       mainImage,
-    //       "products/main"
-    //     )
-    //     updateData.img = mainImageUrl
-    //   } catch (error) {
-    //     console.error("Error uploading main image:", error)
-    //     return {
-    //       success: false,
-    //       message: "Failed to upload main image",
-    //       error: error instanceof Error ? error.message : "Unknown error",
-    //     }
-    //   }
-    // }
 
     const formEntries = Array.from(formData.entries())
     const additionalImagesEntries = formEntries.filter(

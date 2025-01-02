@@ -5,7 +5,6 @@ import { X, Upload, Loader2, ImagePlus, Trash2 } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
 
-
 interface AddProductFormProps {
   isOpen: boolean
   onClose: () => void
@@ -19,6 +18,7 @@ interface FormData {
   sizes: string[]
   feature: string[]
   images: File[]
+  isFeatured: boolean
 }
 
 interface PreviewImage {
@@ -40,6 +40,7 @@ export default function AddProductForm({
     sizes: [],
     feature: [],
     images: [],
+    isFeatured: false,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [previewImages, setPreviewImages] = useState<PreviewImage[]>([])
@@ -145,14 +146,13 @@ export default function AddProductForm({
     try {
       const formDataToSend = new FormData()
 
-      // Add basic fields
       formDataToSend.append("name", formData.name)
       formDataToSend.append("description", formData.description)
       formDataToSend.append("category", formData.category)
       formDataToSend.append("sizes", JSON.stringify(formData.sizes))
       formDataToSend.append("feature", JSON.stringify(formData.feature))
+      formDataToSend.append("isFeatured", String(formData.isFeatured))
 
-      // Add images
       previewImages.forEach(({ file }) => {
         formDataToSend.append("additionalImages", file)
       })
@@ -169,7 +169,6 @@ export default function AddProductForm({
         onProductAdded()
         onClose()
 
-        // Reset form
         setFormData({
           name: "",
           description: "",
@@ -177,19 +176,16 @@ export default function AddProductForm({
           sizes: [],
           feature: [],
           images: [],
+          isFeatured: false,
         })
         setPreviewImages([])
       } else {
         throw new Error(data.message || "Failed to add product")
       }
     } catch (error) {
-      if (error instanceof Error) {
-        // This ensures error.message is accessed only if it's an instance of Error
-        toast.error(error.message)
-      } else {
-        // Handle cases where the error might not be an instance of Error (for example, if it's a string or a custom object)
-        toast.error("An unexpected error occurred")
-      }
+      toast.error(
+        error instanceof Error ? error.message : "An unexpected error occurred"
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -436,6 +432,25 @@ export default function AddProductForm({
                 )}
               </div>
             </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={formData.isFeatured}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    isFeatured: e.target.checked,
+                  }))
+                }
+                className="form-checkbox h-4 w-4 text-blue-600"
+              />
+              <span className="text-sm font-medium text-gray-700">
+                Feature this product
+              </span>
+            </label>
           </div>
 
           {/* Submit Button */}

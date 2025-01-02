@@ -111,3 +111,15 @@ export const uploadToCloudinary = async (
     throw error;
   }
 };
+
+
+export const deleteFromCloudinary = async (imageUrl: string): Promise<void> => {
+  try {
+    // Extract public_id from URL
+    const publicId = imageUrl.split('/').slice(-1)[0].split('.')[0]
+    await cloudinary.uploader.destroy(publicId)
+  } catch (error) {
+    console.error("Error deleting from Cloudinary:", error)
+    throw error
+  }
+}

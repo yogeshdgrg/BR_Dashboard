@@ -13,6 +13,16 @@ interface ProductImage {
   image: string
 }
 
+// interface Product {
+//   _id: string
+//   name: string
+//   description: string
+//   category: string
+//   sizes: string[]
+//   feature: string[]
+//   images: ProductImage[]
+// }
+
 interface Product {
   _id: string
   name: string
@@ -21,6 +31,7 @@ interface Product {
   sizes: string[]
   feature: string[]
   images: ProductImage[]
+  isFeatured: boolean
 }
 
 interface EditProductFormProps {
@@ -46,6 +57,7 @@ export default function EditProductForm({
     name: initialProduct.name,
     description: initialProduct.description,
     category: initialProduct.category,
+    isFeatured: initialProduct.isFeatured,
   })
 
   useEffect(() => {
@@ -55,6 +67,7 @@ export default function EditProductForm({
         name: initialProduct.name,
         description: initialProduct.description,
         category: initialProduct.category,
+        isFeatured: initialProduct.isFeatured,
       })
       setImagesToDelete([])
       setAdditionalImages([])
@@ -123,6 +136,7 @@ export default function EditProductForm({
       formDataToSend.append("category", formData.category)
       formDataToSend.append("sizes", JSON.stringify(product?.sizes || []))
       formDataToSend.append("feature", JSON.stringify(product?.feature || []))
+      formDataToSend.append("isFeatured", String(formData.isFeatured))
 
       if (imagesToDelete.length > 0) {
         formDataToSend.append("imagesToDelete", JSON.stringify(imagesToDelete))
@@ -347,6 +361,25 @@ export default function EditProductForm({
                   className="w-full"
                 />
               </div>
+            </div>
+
+            <div className="mt-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={formData.isFeatured}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      isFeatured: e.target.checked,
+                    }))
+                  }
+                  className="form-checkbox h-4 w-4 text-blue-600"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Feature this product
+                </span>
+              </label>
             </div>
 
             <div className="flex justify-end gap-4 pt-4">

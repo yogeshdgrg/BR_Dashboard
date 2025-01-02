@@ -12,14 +12,17 @@ interface ProductImage {
   _id: string;
   image: string;
 }
+
+
 interface Product {
-  _id: string;
-  name: string;
-  description: string;
-  category: string;
-  sizes: string[];
-  feature: string[];
-  images: ProductImage[];
+  _id: string
+  name: string
+  description: string
+  category: string
+  sizes: string[]
+  feature: string[]
+  images: ProductImage[]
+  isFeatured: boolean
 }
 export default function ProductList() {
   const [products, setProducts] = useState<Product[]>([]);
