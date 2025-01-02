@@ -101,20 +101,21 @@ export async function DELETE(
 
 export const PUT = async (
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) => {
   try {
-    if (!Types.ObjectId.isValid(params.id)) {
-      return {
+    const id = (await params).id
+    if (!Types.ObjectId.isValid(id)) {
+      return NextResponse.json( {
         success: false,
         message: "Invalid product ID format",
-      }
+      })
     }
 
     await connectDb()
     const formData = await request.formData()
 
-    const existingProduct = await Product.findById(params.id)
+    const existingProduct = await Product.findById(id)
     if (!existingProduct) {
       return NextResponse.json({
         success: false,
@@ -174,7 +175,7 @@ export const PUT = async (
     // Rest of the image handling code remains the same
 
     const updatedProduct = await Product.findByIdAndUpdate(
-      params.id,
+      id,
       { $set: updateData },
       { new: true, runValidators: true }
     )
