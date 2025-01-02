@@ -5,6 +5,7 @@ import { X, Upload, Loader2, ImagePlus, Trash2 } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
 
+
 interface AddProductFormProps {
   isOpen: boolean
   onClose: () => void
