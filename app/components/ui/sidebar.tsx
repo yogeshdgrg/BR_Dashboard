@@ -7,6 +7,7 @@ import {
   ShoppingBag,
   ClipboardList,
   Newspaper,
+  BookMinus,
 } from "lucide-react"
 
 const navigation = [
@@ -14,6 +15,7 @@ const navigation = [
   { name: "Products", href: "/admin/products", icon: ShoppingBag },
   { name: "Orders", href: "/admin/orders", icon: ClipboardList },
   { name: "News", href: "/admin/news", icon: Newspaper },
+  { name: "Banner", href: "/admin/banner", icon: BookMinus },
 ]
 
 export default function Sidebar() {

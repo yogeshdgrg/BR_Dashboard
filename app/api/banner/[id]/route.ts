@@ -3,6 +3,145 @@ import Banner from "@/lib/models/banner"
 import { deleteFromCloudinary, uploadToCloudinary } from "@/utils/cloudinary"
 import { NextResponse, NextRequest } from "next/server"
 
+// export const PATCH = async (
+//   request: NextRequest,
+//   { params }: { params: Promise<{ id: string }> }
+// ) => {
+//   try {
+//     await connectDb()
+//     const formData = await request.formData()
+//     const id = (await params).id
+//     const img = formData.get("image") as File | null
+//     const link = formData.get("link") as string | ""
+
+//     if (!id) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           message: "Banner ID is required",
+//         },
+//         { status: 400 }
+//       )
+//     }
+
+//     const existingBanner = await Banner.findById(id)
+//     if (!existingBanner) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           message: "Banner not found",
+//         },
+//         { status: 404 }
+//       )
+//     }
+
+//     const updateData: { image?: string; link?: string } = {}
+
+//     // Handle image update
+//     if (img) {
+//       // Delete old image from Cloudinary
+//       if (existingBanner.image) {
+//         await deleteFromCloudinary(existingBanner.image)
+//       }
+//       // Upload new image
+//       const newImageUrl = await uploadToCloudinary(img, "banner")
+//       updateData.image = newImageUrl
+//     }
+
+//     // Handle link update
+//     if (link) {
+//       updateData.link = link
+//     }
+
+//     const updatedBanner = await Banner.findByIdAndUpdate(id, updateData, {
+//       new: true,
+//     })
+
+//     return NextResponse.json({
+//       success: true,
+//       message: "Banner updated successfully",
+//       banner: updatedBanner,
+//     })
+//   } catch (error) {
+//     console.error("Error updating banner:", error)
+//     return NextResponse.json(
+//       {
+//         success: false,
+//         error: error instanceof Error ? error.message : "Something went wrong",
+//       },
+//       { status: 500 }
+//     )
+//   }
+// }
+
+// export const PATCH = async (
+//     request: NextRequest,
+//     { params }: { params: Promise<{ id: string }> }
+//   ) => {
+//     try {
+//       await connectDb()
+//       const formData = await request.formData()
+//       const id = (await params).id
+//       const img = formData.get("image") as File | null
+//       const link = formData.get("link") as string | null
+
+//       console.log(img, link)
+
+//       if (!id) {
+//         return NextResponse.json(
+//           {
+//             success: false,
+//             message: "Banner ID is required",
+//           },
+//           { status: 400 }
+//         )
+//       }
+
+//       const existingBanner = await Banner.findById(id)
+//       if (!existingBanner) {
+//         return NextResponse.json(
+//           {
+//             success: false,
+//             message: "Banner not found",
+//           },
+//           { status: 404 }
+//         )
+//       }
+
+//       const updateData: { image?: string; link?: string | null } = {}
+
+//       if (img) {
+//         if (existingBanner.image) {
+//           await deleteFromCloudinary(existingBanner.image)
+//         }
+//         const newImageUrl = await uploadToCloudinary(img, "banner")
+//         updateData.image = newImageUrl
+//       }
+
+//       // Set link even if it's empty
+//       updateData.link = link || undefined
+
+//       const updatedBanner = await Banner.findByIdAndUpdate(id, updateData, {
+//         new: true,
+//       })
+
+//       return NextResponse.json({
+//         success: true,
+//         message: "Banner updated successfully",
+//         banner: updatedBanner,
+//       })
+//     } catch (error) {
+//       console.error("Error updating banner:", error)
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           error: error instanceof Error ? error.message : "Something went wrong",
+//         },
+//         { status: 500 }
+//       )
+//     }
+//   }
+
 export const PATCH = async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -13,6 +152,9 @@ export const PATCH = async (
     const id = (await params).id
     const img = formData.get("image") as File | null
     const link = formData.get("link") as string | null
+
+    // console.log("Image : ", img)
+    // console.log("Link: ", link)
 
     if (!id) {
       return NextResponse.json(
@@ -35,22 +177,20 @@ export const PATCH = async (
       )
     }
 
-    const updateData: { image?: string; link?: string } = {}
+    const updateData: { image?: string; link?: string | null } = {
+      // Always include link in updateData, even if it's null
+      link: link,
+      image: existingBanner.image,
+    }
 
-    // Handle image update
-    if (img) {
-      // Delete old image from Cloudinary
+    // console.log("UpdateData: ", updateData)
+
+    if (img && img.size !== 0) {
       if (existingBanner.image) {
         await deleteFromCloudinary(existingBanner.image)
       }
-      // Upload new image
       const newImageUrl = await uploadToCloudinary(img, "banner")
       updateData.image = newImageUrl
-    }
-
-    // Handle link update
-    if (link) {
-      updateData.link = link
     }
 
     const updatedBanner = await Banner.findByIdAndUpdate(id, updateData, {
