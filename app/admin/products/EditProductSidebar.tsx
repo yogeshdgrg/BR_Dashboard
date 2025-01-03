@@ -184,7 +184,9 @@ function EditProductForm({
       onClick={handleOutsideClick}
     >
 <div
-  onClick={(e: any) => e.stopPropagation()}
+  // onClick={(e:R) => e.stopPropagation()}
+  onClick={(e: React.MouseEvent<HTMLDivElement, MouseEvent>) => e.stopPropagation()}
+
   className={`h-full fixed top-0 right-0 w-full md:w-2/3 lg:w-1/2 bg-white shadow-2xl transition-all duration-300 ease-out overflow-y-auto ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
 >
 

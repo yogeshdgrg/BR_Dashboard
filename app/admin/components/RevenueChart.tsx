@@ -16,9 +16,7 @@ import { Line } from "react-chartjs-2"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
-  ArrowUpRight,
-  ArrowDownRight,
-  DollarSign,
+
   Package,
   // TrendingUp
 } from "lucide-react"
@@ -159,9 +157,9 @@ const SalesDashboard = () => {
   const totalOrders = salesData.reduce((sum, item) => sum + item.orderCount, 0)
 
   // Calculate month-over-month growth
-  const currentMonth = new Date().getMonth()
-  const currentMonthData = salesData[currentMonth]
-  const previousMonthData = salesData[currentMonth - 1]
+  // const currentMonth = new Date().getMonth()
+  // const currentMonthData = salesData[currentMonth]
+  // const previousMonthData = salesData[currentMonth - 1]
 
 
   return (
