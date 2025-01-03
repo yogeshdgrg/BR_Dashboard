@@ -36,7 +36,6 @@ import {
   ClipboardList,
   Newspaper,
   BookMinus,
-  Icon,
 } from "lucide-react"
 import {
   Popover,
@@ -44,7 +43,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 // import { cookies } from "next/headers";
-import { useEffect } from "react"
 import { handleLogout } from "@/lib/handleLogout"
 // import { handleLogout } from "@/lib/handleLogout"
 
@@ -112,9 +110,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <Image
                 src="/br.jpg"
                 alt="avatar"
-                width={56}
-                height={56}
-                className="h-14 w-14 rounded-full object-cover border-green-500"
+                width={48}
+                height={48}
+                className="h-12 w-12 rounded-full object-cover border-green-500"
               />
             </PopoverTrigger>
             <PopoverContent className="w-32 mr-7">
