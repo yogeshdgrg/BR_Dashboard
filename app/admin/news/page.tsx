@@ -202,11 +202,15 @@ export default function NewsPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div
+      className={`container mx-auto py-8 px-4 ${
+        isEditOpen || isAddOpen ? "blur-sm" : ""
+      } transition-all duration-200`}
+    >
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">News Dashboard</h1>
-        <Button onClick={() => setIsAddOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+        <Button className="bg-blue-500 hover:bg-blue-500" onClick={() => setIsAddOpen(true)}>
+          <Plus className="h-4 w-4 mr-2 " />
           Add News
         </Button>
       </div>

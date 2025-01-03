@@ -1,10 +1,22 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { X, Loader2, Plus, Trash } from "lucide-react"
+import {
+  X,
+  Loader2,
+  Plus,
+  Trash2,
+  PackageOpen,
+  Type,
+  FileText,
+  Grid,
+  Tags,
+  Star,
+  Image as ImageIcon,
+  ListPlus,
+  Save,
+} from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
 
@@ -12,16 +24,6 @@ interface ProductImage {
   _id: string
   image: string
 }
-
-// interface Product {
-//   _id: string
-//   name: string
-//   description: string
-//   category: string
-//   sizes: string[]
-//   feature: string[]
-//   images: ProductImage[]
-// }
 
 interface Product {
   _id: string
@@ -41,7 +43,7 @@ interface EditProductFormProps {
   product: Product
 }
 
-export default function EditProductForm({
+function EditProductForm({
   isOpen,
   onClose,
   onProductUpdated,
@@ -73,6 +75,13 @@ export default function EditProductForm({
       setAdditionalImages([])
     }
   }, [isOpen, initialProduct])
+
+  // Click outside handler
+  const handleOutsideClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose()
+    }
+  }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -171,36 +180,50 @@ export default function EditProductForm({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-hidden">
-      <div className="absolute right-0 top-0 h-full w-full md:w-2/3 lg:w-1/2 bg-white transform transition-transform duration-300 ease-in-out overflow-y-auto">
+    <div
+      className="fixed inset-0 h-screen bg-black/50 backdrop-blur-sm z-50 transition-opacity"
+      onClick={handleOutsideClick}
+    >
+      <div className="absolute right-0 top-0 h-full w-full md:w-2/3 lg:w-1/2 bg-white shadow-2xl transform transition-transform duration-300 ease-out overflow-y-auto">
         <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Edit Product
-            </h2>
-            <Button variant="ghost" size="icon" onClick={onClose}>
+          <div className="flex justify-between items-center mb-6 border-b pb-4">
+            <div className="flex items-center gap-2">
+              <PackageOpen className="h-6 w-6 text-blue-600" />
+              <h2 className="text-xl font-semibold text-gray-900">
+                Edit Product
+              </h2>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="hover:bg-gray-100 rounded-full"
+            >
               <X className="h-6 w-6" />
             </Button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Name
-              </label>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-gray-700">
+                <Type className="h-5 w-5" />
+                <label className="block text-sm font-medium">Name</label>
+              </div>
               <Input
                 value={formData.name}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-gray-700">
+                <FileText className="h-5 w-5" />
+                <label className="block text-sm font-medium">Description</label>
+              </div>
               <Textarea
                 value={formData.description}
                 onChange={(e) =>
@@ -209,32 +232,37 @@ export default function EditProductForm({
                     description: e.target.value,
                   }))
                 }
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category
-              </label>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-gray-700">
+                <Grid className="h-5 w-5" />
+                <label className="block text-sm font-medium">Category</label>
+              </div>
               <Input
                 value={formData.category}
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, category: e.target.value }))
                 }
+                className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 required
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sizes
-              </label>
-              <div className="flex gap-2 mb-2">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-gray-700">
+                <Tags className="h-5 w-5" />
+                <label className="block text-sm font-medium">Sizes</label>
+              </div>
+              <div className="flex gap-2">
                 <Input
                   value={newSize}
                   onChange={(e) => setNewSize(e.target.value)}
                   placeholder="Add new size"
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <Button
                   type="button"
@@ -247,33 +275,34 @@ export default function EditProductForm({
               </div>
               <div className="flex flex-wrap gap-2">
                 {product.sizes.map((size, index) => (
-                  <div
+                  <span
                     key={index}
-                    className="flex items-center bg-gray-100 rounded-full px-3 py-1"
+                    className="inline-flex items-center bg-blue-50 text-blue-700 rounded-full px-3 py-1 text-sm"
                   >
-                    <span>{size}</span>
+                    {size}
                     <button
                       type="button"
-                      aria-label="Remove size"
                       onClick={() => handleRemoveSize(index)}
-                      className="ml-2 text-red-600 hover:text-red-900"
+                      className="ml-2 text-blue-600 hover:text-blue-800"
                     >
                       <X className="h-4 w-4" />
                     </button>
-                  </div>
+                  </span>
                 ))}
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Features
-              </label>
-              <div className="flex gap-2 mb-2">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-gray-700">
+                <ListPlus className="h-5 w-5" />
+                <label className="block text-sm font-medium">Features</label>
+              </div>
+              <div className="flex gap-2">
                 <Input
                   value={newFeature}
                   onChange={(e) => setNewFeature(e.target.value)}
                   placeholder="Add new feature"
+                  className="border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <Button
                   type="button"
@@ -288,14 +317,13 @@ export default function EditProductForm({
                 {product.feature.map((feature, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between bg-gray-100 rounded p-2"
+                    className="flex items-center justify-between bg-gray-50 rounded-lg p-3"
                   >
-                    <span>{feature}</span>
+                    <span className="text-gray-700">{feature}</span>
                     <button
-                      aria-label="Remove feature"
                       type="button"
                       onClick={() => handleRemoveFeature(index)}
-                      className="text-red-600 hover:text-red-900"
+                      className="text-gray-400 hover:text-red-600"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -304,10 +332,11 @@ export default function EditProductForm({
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Images
-              </label>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-gray-700">
+                <ImageIcon className="h-5 w-5" />
+                <label className="block text-sm font-medium">Images</label>
+              </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {product.images
                   .filter((img) => !imagesToDelete.includes(img._id))
@@ -321,12 +350,11 @@ export default function EditProductForm({
                         className="rounded-lg object-cover w-full h-40"
                       />
                       <button
-                        aria-label="Delete Image"
                         type="button"
                         onClick={() => handleDeleteImage(img._id)}
-                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <Trash className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   ))}
@@ -341,12 +369,11 @@ export default function EditProductForm({
                       className="rounded-lg object-cover w-full h-40"
                     />
                     <button
-                      aria-label="Remove new image"
                       type="button"
                       onClick={() => handleRemoveNewImage(index)}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <Trash className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 ))}
@@ -363,7 +390,8 @@ export default function EditProductForm({
               </div>
             </div>
 
-            <div className="mt-4">
+            <div className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-yellow-500" />
               <label className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -374,7 +402,7 @@ export default function EditProductForm({
                       isFeatured: e.target.checked,
                     }))
                   }
-                  className="form-checkbox h-4 w-4 text-blue-600"
+                  className="form-checkbox h-4 w-4 text-blue-600 rounded"
                 />
                 <span className="text-sm font-medium text-gray-700">
                   Feature this product
@@ -382,12 +410,12 @@ export default function EditProductForm({
               </label>
             </div>
 
-            <div className="flex justify-end gap-4 pt-4">
+            <div className="flex justify-end gap-4 pt-6 border-t">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
-                className="text-gray-700"
+                className="border-gray-300 text-gray-700"
               >
                 Cancel
               </Button>
@@ -396,7 +424,11 @@ export default function EditProductForm({
                 disabled={loading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
-                {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {loading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
                 Save Changes
               </Button>
             </div>
@@ -406,3 +438,5 @@ export default function EditProductForm({
     </div>
   )
 }
+
+export default EditProductForm
