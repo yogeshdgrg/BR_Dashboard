@@ -93,7 +93,7 @@ function ProductList() {
     <>
       {/* Blur overlay when forms are open */}
       {(isAddFormOpen || isEditFormOpen || isDeleteModalOpen) && (
-        <div className="" />
+        <div onClick={()=>{setIsAddFormOpen(false)}} className=" fixed top-0 left-0 w-full h-screen bg-transparent backdrop-blur-sm transition-all duration-300" />
       )}
 
       <div className="space-y-6 p-4 md:p-6">

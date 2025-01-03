@@ -177,14 +177,17 @@ function EditProductForm({
     }
   }
 
-  if (!isOpen) return null
 
   return (
     <div
-      className="fixed inset-0 h-screen bg-black/50 backdrop-blur-sm z-50 transition-opacity"
+      className="fixed inset-0 h-screen -top-6  flex justify-end overflow-x-hidden backdrop-blur-sm z-50 transition-opacity"
       onClick={handleOutsideClick}
     >
-      <div className="absolute right-0 top-0 h-full w-full md:w-2/3 lg:w-1/2 bg-white shadow-2xl transform transition-transform duration-300 ease-out overflow-y-auto">
+<div
+  onClick={(e: any) => e.stopPropagation()}
+  className={`h-full fixed top-0 right-0 w-full md:w-2/3 lg:w-1/2 bg-white shadow-2xl transition-all duration-300 ease-out overflow-y-auto ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+>
+
         <div className="p-6">
           <div className="flex justify-between items-center mb-6 border-b pb-4">
             <div className="flex items-center gap-2">

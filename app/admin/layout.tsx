@@ -103,7 +103,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       </section>
 
       {/* main content section */}
-      <section className="!overflow-y-scroll col-span-10">
+      <section className="!overflow-y-auto col-span-10">
         {/* user profile icon */}
         <div className="h-16 bg-white border flex justify-between px-4 items-center">
           <h2 className="text-lg font-bold text-zinc-950">Admin Dashboard</h2>
@@ -114,7 +114,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 alt="avatar"
                 width={56}
                 height={56}
-                className="h-14 w-14 rounded-full object-cover border-green-500"
+                className="h-14 w-14 rounded-full object-contain border-green-500"
               />
             </PopoverTrigger>
             <PopoverContent className="w-32 mr-7">
