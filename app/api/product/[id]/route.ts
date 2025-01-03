@@ -6,8 +6,20 @@ import { Types } from "mongoose"
 import { uploadToCloudinary } from "@/utils/cloudinary"
 
 interface Image {
+  _id?: string
   image: string
 }
+
+interface UpdateData {
+  name: string
+  description: string
+  category: string
+  sizes: string[]
+  feature: string[]
+  isFeatured: boolean
+  images: Image[]
+}
+
 
 export const GET = async (
   req: NextRequest,
@@ -106,7 +118,7 @@ export const PUT = async (
   try {
     const id = (await params).id
     if (!Types.ObjectId.isValid(id)) {
-      return NextResponse.json( {
+      return NextResponse.json({
         success: false,
         message: "Invalid product ID format",
       })
@@ -123,12 +135,11 @@ export const PUT = async (
       })
     }
 
-    const updateData = {
+    // Prepare update data with existing values as fallback
+    const updateData: UpdateData = {
       name: (formData.get("name") as string) || existingProduct.name,
-      description:
-        (formData.get("description") as string) || existingProduct.description,
-      category:
-        (formData.get("category") as string) || existingProduct.category,
+      description: (formData.get("description") as string) || existingProduct.description,
+      category: (formData.get("category") as string) || existingProduct.category,
       sizes: formData.get("sizes")
         ? JSON.parse(formData.get("sizes") as string)
         : existingProduct.sizes,
@@ -138,14 +149,17 @@ export const PUT = async (
       isFeatured: formData.get("isFeatured")
         ? formData.get("isFeatured") === "true"
         : existingProduct.isFeatured,
-      images: [] as Image[],
+      images: [...existingProduct.images] // Initialize with existing images
     }
-
+    // Handle images
     const formEntries = Array.from(formData.entries())
     const additionalImagesEntries = formEntries.filter(
       ([key]) => key === "additionalImages"
     )
 
+    let images = [...existingProduct.images] // Start with existing images
+
+    // Only process new images if they exist in the form data
     if (additionalImagesEntries.length > 0) {
       const processedImages = []
 
@@ -162,17 +176,25 @@ export const PUT = async (
             })
           } catch (error) {
             console.error("Error uploading additional image:", error)
-            // Continue with other images even if one fails
           }
         }
       }
 
+      // If new images were successfully processed, append them to existing images
       if (processedImages.length > 0) {
-        updateData.images = processedImages
+        images = [...images, ...processedImages]
       }
     }
 
-    // Rest of the image handling code remains the same
+    // Handle image deletions if specified
+    const imagesToDelete = formData.get("imagesToDelete")
+    if (imagesToDelete) {
+      const deleteIds = JSON.parse(imagesToDelete as string)
+      images = images.filter(img => !deleteIds.includes(img._id.toString()))
+    }
+
+    // Add images to update data only if there were changes
+    updateData.images = images
 
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
