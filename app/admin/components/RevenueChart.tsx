@@ -162,41 +162,11 @@ const SalesDashboard = () => {
   const currentMonth = new Date().getMonth()
   const currentMonthData = salesData[currentMonth]
   const previousMonthData = salesData[currentMonth - 1]
-  const revenueGrowth = previousMonthData?.totalAmount
-    ? ((currentMonthData?.totalAmount - previousMonthData?.totalAmount) /
-        previousMonthData?.totalAmount) *
-      100
-    : 0
+
 
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              Rs.{totalRevenue.toLocaleString()}
-            </div>
-            <div className="flex items-center text-xs text-muted-foreground">
-              {revenueGrowth >= 0 ? (
-                <ArrowUpRight className="h-4 w-4 text-green-500" />
-              ) : (
-                <ArrowDownRight className="h-4 w-4 text-red-500" />
-              )}
-              <span
-                className={
-                  revenueGrowth >= 0 ? "text-green-500" : "text-red-500"
-                }
-              >
-                {Math.abs(revenueGrowth).toFixed(1)}% from last month
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Products Sold</CardTitle>
@@ -209,22 +179,6 @@ const SalesDashboard = () => {
             <p className="text-xs text-muted-foreground">
               Across {totalOrders} orders
             </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Average Order Value
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              Rs.
-              {totalOrders ? (totalRevenue / totalOrders).toFixed(2) : "0.00"}
-            </div>
-            <p className="text-xs text-muted-foreground">Per order average</p>
           </CardContent>
         </Card>
       </div>
